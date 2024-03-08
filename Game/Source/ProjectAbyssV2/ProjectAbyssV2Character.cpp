@@ -75,8 +75,10 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
 			// set up gameplay key bindings
-			PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
-			PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+			PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
+			PlayerInputComponent->BindAction("Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
+			PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
+			PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
 			PlayerInputComponent->BindAxis("MoveRight", this, &AProjectAbyssV2Character::MoveRight);
 
 			PlayerInputComponent->BindTouch(IE_Pressed, this, &AProjectAbyssV2Character::TouchStarted);
@@ -99,8 +101,10 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 		{
 			//PLAYER 2 STUFF
 			// set up gameplay key bindings
-			PlayerInputComponent->BindAction("JumpP2", IE_Pressed, this, &ACharacter::Jump);
-			PlayerInputComponent->BindAction("JumpP2", IE_Released, this, &ACharacter::StopJumping);
+			PlayerInputComponent->BindAction("JumpP2", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
+			PlayerInputComponent->BindAction("JumpP2", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
+			PlayerInputComponent->BindAction("CrouchP2", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
+			PlayerInputComponent->BindAction("CrouchP2", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
 			PlayerInputComponent->BindAxis("MoveRightP2", this, &AProjectAbyssV2Character::MoveRight);
 
 			PlayerInputComponent->BindTouch(IE_Pressed, this, &AProjectAbyssV2Character::TouchStarted);
@@ -122,8 +126,55 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 	}
 }
 
+void AProjectAbyssV2Character::Jump()
+{
+	ACharacter::Jump();
+	characterState = ECharacterState::VE_Jumping;
+}
+
+void AProjectAbyssV2Character::StopJumping()
+{
+	ACharacter::StopJumping();
+}
+
+void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
+{
+	//ACharacter::Landed(Hit);
+	characterState = ECharacterState::VE_Default;
+}
+
+void AProjectAbyssV2Character::StartCrouching()
+{
+	isCrouching = true;
+}
+
+void AProjectAbyssV2Character::StopCrouching()
+{
+	isCrouching = false;
+}
+
 void AProjectAbyssV2Character::MoveRight(float Value)
 {
+
+	if (isCrouching)
+	{
+		if (characterState != ECharacterState::VE_Jumping)
+		{
+			if (Value > 0.20f)
+			{
+				characterState = ECharacterState::VE_MovingRight;
+			}
+			else if (Value < -0.20f)
+			{
+				characterState = ECharacterState::VE_MovingLeft;
+			}
+			else
+			{
+				characterState = ECharacterState::VE_Default;
+			}
+		}
+	}
+
 	float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
 
 	if (currentDistanceApart >= maxDistanceApart)

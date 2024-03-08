@@ -6,6 +6,15 @@
 #include "GameFramework/Character.h"
 #include "ProjectAbyssV2Character.generated.h"
 
+UENUM(BlueprintType)
+enum class ECharacterState : uint8
+{
+	VE_Default     UMETA(DisplayName = "NOT_MOVING"),
+	VE_MovingRight UMETA(DisplayName = "MOVING_RIGHT"),
+	VE_MovingLeft  UMETA(DisplayName = "MOVING_LEFT"),
+	VE_Jumping     UMETA(DisplayName = "JUMPING")
+};
+
 UCLASS(config=Game)
 class AProjectAbyssV2Character : public ACharacter
 {
@@ -84,6 +93,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 		AActor* hurtbox;
 
+	//The current state of the character
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		ECharacterState characterState;
+
 	//the character's transform
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
 		FTransform transform;
@@ -97,6 +110,21 @@ protected:
 		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
 		FVector location;
+
+	//Override ACharacter and APawn functionality to have more control over jumping and landing
+	//AKA..............
+	//BEGONE AIR MOVEMENT CONTROL
+	virtual void Jump() override;
+	virtual void StopJumping() override;
+	virtual void Landed(const FHitResult& Hit) override;
+
+	//Make the player begin crouching
+	UFUNCTION(BlueprintCallable)
+		void StartCrouching();
+
+	//Make the player stop crouching
+	UFUNCTION(BlueprintCallable)
+		void StopCrouching();
 
 	//damage the player
 	UFUNCTION(BlueprintCallable)
@@ -138,6 +166,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combos")
 		bool atkHit;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool isCrouching;
 public:
 	AProjectAbyssV2Character();
 
