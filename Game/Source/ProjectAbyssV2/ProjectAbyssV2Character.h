@@ -83,7 +83,7 @@ protected:
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	// End of APawn interface
 
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character)
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 	// ECharacterClass characterClass;
 
 	//Who is it?

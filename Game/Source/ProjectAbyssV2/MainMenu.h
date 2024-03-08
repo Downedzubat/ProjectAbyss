@@ -10,8 +10,9 @@
 UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
-	VE_Default		UMETA(DisplayName = "Mannequin"),
-	VE_MASK		UMETA(DisplayName = "Mask")
+	VE_Default		  UMETA(DisplayName = "Mannequin"),
+	VE_MASK		  UMETA(DisplayName = "Mask"),
+	VE_FIGHTMAN UMETA(DisplayName = "FightMan")
 };
 /**
  * 
