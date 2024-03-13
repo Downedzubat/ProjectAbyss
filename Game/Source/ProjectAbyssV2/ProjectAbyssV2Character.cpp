@@ -321,13 +321,13 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 					{
 						if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
 						{
-							/**
+							
 							transform = mesh->GetRelativeTransform();
 							scale = transform.GetScale3D();
 							scale.Y = -1;
 							transform.SetScale3D(scale);
 							mesh->SetRelativeTransform(transform);
-							*/
+							
 						}
 						isFlipped = false;
 					}
@@ -337,17 +337,13 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 					if (isFlipped)
 						if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
 						{
-							/**
+							
 							transform = mesh->GetRelativeTransform();
-							locationT = mesh->GetRelativeLocation();
 							scale = transform.GetScale3D();
 							scale.Y = 1;
-							location = locationT;
-							location.X += 85;
-							locationT.Set(location.X, location.Y, location.Z);
 							transform.SetScale3D(scale);
 							mesh->SetRelativeTransform(transform);
-							*/
+							
 						}
 					isFlipped = true;
 				}
