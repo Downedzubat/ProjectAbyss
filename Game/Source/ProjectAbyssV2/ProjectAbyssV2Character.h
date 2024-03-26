@@ -12,7 +12,9 @@ enum class ECharacterState : uint8
 	VE_Default     UMETA(DisplayName = "NOT_MOVING"),
 	VE_MovingRight UMETA(DisplayName = "MOVING_RIGHT"),
 	VE_MovingLeft  UMETA(DisplayName = "MOVING_LEFT"),
-	VE_Jumping     UMETA(DisplayName = "JUMPING")
+	VE_Jumping     UMETA(DisplayName = "JUMPING"),
+	VE_Stunned     UMETA(DisplayName = "STUNNED"),
+	VE_Blocking     UMETA(DisplayName = "BLOCKING")
 };
 
 UCLASS(config=Game)
@@ -86,6 +88,9 @@ protected:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 	// ECharacterClass characterClass;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		bool canMove;
 	//Who is it?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		FString charName;
@@ -128,10 +133,25 @@ protected:
 
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount);
+	void TakeDamage(float _damageAmount, float _stunTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 		AProjectAbyssV2Character* otherPlayer;
+
+	//Timer for handling stuns
+	FTimerHandle stunTimerHandle;
+
+	//Stun state start 
+	//(yes this is starting to get good)
+	void BeginStun();
+
+	//Stun State End
+	//Can you feel it too? the whole game starting to come together
+	void EndStun();
+
+	//The amount of time which an attack will stun for
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float stunTime;
 
 	//Player Normals
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")

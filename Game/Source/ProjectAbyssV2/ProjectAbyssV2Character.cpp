@@ -57,6 +57,8 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 
 	playerHealth = 1.00f;
 	maxDistanceApart = 600.0f;
+	stunTime = 0.0f;
+	canMove = true;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -156,7 +158,7 @@ void AProjectAbyssV2Character::StopCrouching()
 void AProjectAbyssV2Character::MoveRight(float Value)
 {
 
-	if (isCrouching)
+	if (!isCrouching)
 	{
 		if (characterState != ECharacterState::VE_Jumping)
 		{
@@ -239,10 +241,15 @@ void AProjectAbyssV2Character::StartRoundhouse()
 	wasRoundhouseUsed = true;
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount)
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime)
 {
 	UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
 	playerHealth -= _damageAmount;
+
+	characterState = ECharacterState::VE_Stunned;
+	stunTime = _stunTime;
+	BeginStun();
+
 	if (otherPlayer)
 	{
 		otherPlayer->atkHit = true;
@@ -253,6 +260,20 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount)
 		playerHealth = 0.00f;
 	}
 }
+
+void AProjectAbyssV2Character::BeginStun()
+{
+	canMove = false;
+	GetWorld()->GetTimerManager().SetTimer(stunTimerHandle, this, &AProjectAbyssV2Character::EndStun, stunTime, false);
+
+}
+
+void AProjectAbyssV2Character::EndStun()
+{
+	characterState = ECharacterState::VE_Default;
+	canMove = true;
+}
+
 
 
 
@@ -306,46 +327,49 @@ void AProjectAbyssV2Character::P2KeyboardMoveRight(float _value)
 void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	if (characterState != ECharacterState::VE_Jumping) {
 
-	if (otherPlayer)
-	{
-		if (auto characterMovement = GetCharacterMovement())
+
+		if (otherPlayer)
 		{
-			if (auto enemyMovement = otherPlayer->GetCharacterMovement())
+			if (auto characterMovement = GetCharacterMovement())
 			{
-				if (enemyMovement->GetActorLocation().Y >= characterMovement->GetActorLocation().Y)
+				if (auto enemyMovement = otherPlayer->GetCharacterMovement())
 				{
-					// the following code should 110% be using scale.Y, but for some reason with Mask, it has to be scale.Z I'll note this down and look into a fix -FIXED
-					//Now when Mask is flipped she is disjointed from hurtbox, I think the best solution is going to be to make our own idle anim using cascadeur
-					if (isFlipped)
+					if (enemyMovement->GetActorLocation().Y >= characterMovement->GetActorLocation().Y)
 					{
-						if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
+						// the following code should 110% be using scale.Y, but for some reason with Mask, it has to be scale.Z I'll note this down and look into a fix -FIXED
+						//Now when Mask is flipped she is disjointed from hurtbox, I think the best solution is going to be to make our own idle anim using cascadeur
+						if (isFlipped)
 						{
-							
-							transform = mesh->GetRelativeTransform();
-							scale = transform.GetScale3D();
-							scale.Y = -1;
-							transform.SetScale3D(scale);
-							mesh->SetRelativeTransform(transform);
-							
+							if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
+							{
+
+								transform = mesh->GetRelativeTransform();
+								scale = transform.GetScale3D();
+								scale.Y = -1;
+								transform.SetScale3D(scale);
+								mesh->SetRelativeTransform(transform);
+
+							}
+							isFlipped = false;
 						}
-						isFlipped = false;
 					}
-				}
-				else
-				{
-					if (isFlipped)
-						if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
-						{
-							
-							transform = mesh->GetRelativeTransform();
-							scale = transform.GetScale3D();
-							scale.Y = 1;
-							transform.SetScale3D(scale);
-							mesh->SetRelativeTransform(transform);
-							
-						}
-					isFlipped = true;
+					else
+					{
+						if (isFlipped)
+							if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
+							{
+
+								transform = mesh->GetRelativeTransform();
+								scale = transform.GetScale3D();
+								scale.Y = 1;
+								transform.SetScale3D(scale);
+								mesh->SetRelativeTransform(transform);
+
+							}
+						isFlipped = true;
+					}
 				}
 			}
 		}
