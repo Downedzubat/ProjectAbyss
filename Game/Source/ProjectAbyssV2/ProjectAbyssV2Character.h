@@ -13,6 +13,7 @@ enum class ECharacterState : uint8
 	VE_MovingRight UMETA(DisplayName = "MOVING_RIGHT"),
 	VE_MovingLeft  UMETA(DisplayName = "MOVING_LEFT"),
 	VE_Jumping     UMETA(DisplayName = "JUMPING"),
+	VE_Crouching   UMETA(DisplayName = "CROUCHING"),
 	VE_Stunned     UMETA(DisplayName = "STUNNED"),
 	VE_Blocking     UMETA(DisplayName = "BLOCKING")
 };
@@ -131,9 +132,12 @@ protected:
 	UFUNCTION(BlueprintCallable)
 		void StopCrouching();
 
+	UFUNCTION(BlueprintCallable)
+		void CollidedWithProximityHitbox();
+
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount, float _stunTime);
+	void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 		AProjectAbyssV2Character* otherPlayer;

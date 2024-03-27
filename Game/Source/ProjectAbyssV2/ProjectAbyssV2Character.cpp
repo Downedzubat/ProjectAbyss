@@ -147,18 +147,22 @@ void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 
 void AProjectAbyssV2Character::StartCrouching()
 {
+	characterState = ECharacterState::VE_Crouching;
 	isCrouching = true;
+	canMove = false;
 }
 
 void AProjectAbyssV2Character::StopCrouching()
 {
+	characterState = ECharacterState::VE_Default;
 	isCrouching = false;
+	canMove = true;
 }
 
 void AProjectAbyssV2Character::MoveRight(float Value)
 {
 
-	if (!isCrouching)
+	if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking)
 	{
 		if (characterState != ECharacterState::VE_Jumping)
 		{
@@ -184,13 +188,19 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 		if ((currentDistanceApart + Value < currentDistanceApart && !isFlipped) || (currentDistanceApart - Value < currentDistanceApart && isFlipped))
 		{
 			// add movement in that direction
-			AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+			if (canMove) {
+				AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+			}
+			
 		}
 	}
 	else
 	{
-		// add movement in that direction
-		AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+		if (canMove) {
+			// add movement in that direction
+			AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+		}
+	
 	}
 }
 
@@ -241,18 +251,55 @@ void AProjectAbyssV2Character::StartRoundhouse()
 	wasRoundhouseUsed = true;
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime)
+void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 {
-	UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
-	playerHealth -= _damageAmount;
-
-	characterState = ECharacterState::VE_Stunned;
-	stunTime = _stunTime;
-	BeginStun();
-
-	if (otherPlayer)
+	if ((characterState == ECharacterState::VE_MovingLeft && isFlipped) || (characterState == ECharacterState::VE_MovingRight && !isFlipped))
 	{
-		otherPlayer->atkHit = true;
+		canMove = false;
+		UE_LOG(LogTemp, Warning, TEXT("The Character is autoblocking."));
+		characterState = ECharacterState::VE_Blocking;
+	}
+}
+
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime)
+{
+	if (characterState != ECharacterState::VE_Blocking) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
+		playerHealth -= _damageAmount;
+
+		
+		stunTime = _stunTime;
+		
+		if (stunTime > 0.0f)
+		{
+			characterState = ECharacterState::VE_Stunned;
+			BeginStun();
+		}
+		
+
+		if (otherPlayer)
+		{
+			otherPlayer->atkHit = true;
+		}
+	}
+	else
+	{
+		float reducedDamage = _damageAmount * 0.5f;
+		UE_LOG(LogTemp, Warning, TEXT("We are taking reduced damage for %f points."), reducedDamage);
+		playerHealth -= reducedDamage;
+
+		stunTime = _blockstunTime;
+	}
+
+	if (stunTime > 0.0f)
+	{
+		characterState = ECharacterState::VE_Stunned;
+		BeginStun();
+	}
+	else
+	{
+		characterState = ECharacterState::VE_Default;
 	}
 
 	if (playerHealth < 0.00f)
@@ -324,54 +371,57 @@ void AProjectAbyssV2Character::P2KeyboardMoveRight(float _value)
 {
 	MoveRight(_value);
 }
+
+
 void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	if (characterState != ECharacterState::VE_Jumping) {
-
-
-		if (otherPlayer)
-		{
-			if (auto characterMovement = GetCharacterMovement())
-			{
-				if (auto enemyMovement = otherPlayer->GetCharacterMovement())
-				{
-					if (enemyMovement->GetActorLocation().Y >= characterMovement->GetActorLocation().Y)
-					{
-						// the following code should 110% be using scale.Y, but for some reason with Mask, it has to be scale.Z I'll note this down and look into a fix -FIXED
-						//Now when Mask is flipped she is disjointed from hurtbox, I think the best solution is going to be to make our own idle anim using cascadeur
-						if (isFlipped)
-						{
-							if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
-							{
-
-								transform = mesh->GetRelativeTransform();
-								scale = transform.GetScale3D();
-								scale.Y = -1;
-								transform.SetScale3D(scale);
-								mesh->SetRelativeTransform(transform);
-
-							}
-							isFlipped = false;
-						}
-					}
-					else
-					{
-						if (isFlipped)
-							if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
-							{
-
-								transform = mesh->GetRelativeTransform();
-								scale = transform.GetScale3D();
-								scale.Y = 1;
-								transform.SetScale3D(scale);
-								mesh->SetRelativeTransform(transform);
-
-							}
-						isFlipped = true;
-					}
-				}
-			}
-		}
-	}
 }
+	//if (characterState != ECharacterState::VE_Jumping) {
+
+
+		//if (otherPlayer)
+	//	{
+	//		if (auto characterMovement = GetCharacterMovement())
+	//		{
+		//		if (auto enemyMovement = otherPlayer->GetCharacterMovement())
+			//	{
+				//	if (enemyMovement->GetActorLocation().Y >= characterMovement->GetActorLocation().Y)
+					//{
+						//// the following code should 110% be using scale.Y, but for some reason with Mask, it has to be scale.Z I'll note this down and look into a fix -FIXED
+						//Now when Mask is flipped she is disjointed from hurtbox, I think the best solution is going to be to make our own idle anim using cascadeur
+						//if (isFlipped)
+					//	{
+						//	if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
+						//	{
+//
+	//							transform = mesh->GetRelativeTransform();
+		//						scale = transform.GetScale3D();
+			//					scale.Y = -1;
+				//				transform.SetScale3D(scale);
+//								mesh->SetRelativeTransform(transform);
+	//
+		//					}
+			//				isFlipped = false;
+		//				}
+				//	}
+			//		else
+	//				{
+					//	if (isFlipped)
+		//					if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
+						//	{
+				//			//
+					//			transform = mesh->GetRelativeTransform();
+					//			scale = transform.GetScale3D();
+				//				scale.Y = 1;
+					//			transform.SetScale3D(scale);
+				//				mesh->SetRelativeTransform(transform);
+
+//							}
+	//					isFlipped = true;
+			//		}
+				//}
+			//}
+		//}
+//	}
+//} 
