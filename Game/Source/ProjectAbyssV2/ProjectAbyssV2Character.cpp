@@ -55,10 +55,27 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	isFlipped = false;
 	atkHit = false;
 
+	hasReleasedAxisInput = true;
 	playerHealth = 1.00f;
 	maxDistanceApart = 600.0f;
 	stunTime = 0.0f;
+	gravityScale = GetCharacterMovement()->GravityScale;
 	canMove = true;
+	removeInputFromBufferTime = 1.0f;
+
+	characterCommands.SetNum(2);
+
+	characterCommands[0].name = "Monstrous Swing";
+	characterCommands[0].inputTypes.Add(EInputType::E_Crouch);
+	characterCommands[0].inputTypes.Add(EInputType::E_Forward);
+	characterCommands[0].inputTypes.Add(EInputType::E_Jab);
+	characterCommands[0].hasUsedCommand = false;
+
+	characterCommands[1].name = "Command2";
+	characterCommands[1].inputs.Add("J");
+	characterCommands[1].inputs.Add("K");
+	characterCommands[1].inputs.Add("L");
+	characterCommands[1].hasUsedCommand = false;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -141,8 +158,12 @@ void AProjectAbyssV2Character::StopJumping()
 
 void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 {
-	//ACharacter::Landed(Hit);
-	characterState = ECharacterState::VE_Default;
+	if (characterState == ECharacterState::VE_Launched || characterState == ECharacterState::VE_Jumping)
+	{
+		//ACharacter::Landed(Hit);
+		GetCharacterMovement()->GravityScale = gravityScale;
+		characterState = ECharacterState::VE_Default;
+	}
 }
 
 void AProjectAbyssV2Character::StartCrouching()
@@ -164,19 +185,22 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 	if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking)
 	{
-		if (characterState != ECharacterState::VE_Jumping)
+		if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
 		{
 			if (Value > 0.20f)
 			{
 				characterState = ECharacterState::VE_MovingRight;
+				hasReleasedAxisInput = false;
 			}
 			else if (Value < -0.20f)
 			{
 				characterState = ECharacterState::VE_MovingLeft;
+				hasReleasedAxisInput = false;
 			}
 			else
 			{
 				characterState = ECharacterState::VE_Default;
+				hasReleasedAxisInput = true;
 			}
 		}
 	}
@@ -219,36 +243,42 @@ void AProjectAbyssV2Character::StartJab()
 {
 	UE_LOG(LogTemp, Warning, TEXT("We are using JAB"))
 	wasJabUsed = true;
+	canMove = false;
 }
 
 void AProjectAbyssV2Character::StartStrong()
 {
 	UE_LOG(LogTemp, Warning, TEXT("We are using STRONG"))
 	wasStrongUsed = true;
+	canMove = false;
 }
 
 void AProjectAbyssV2Character::StartFierce()
 {
 	UE_LOG(LogTemp, Warning, TEXT("We are using FIERCE"))
 	wasFierceUsed = true;
+	canMove = false;
 }
 
 void AProjectAbyssV2Character::StartShort()
 {
 	UE_LOG(LogTemp, Warning, TEXT("We are using SHORT"))
 	wasShortUsed = true;
+	canMove = false;
 }
 
 void AProjectAbyssV2Character::StartLong()
 {
 	UE_LOG(LogTemp, Warning, TEXT("We are using LONG"))
 	wasLongUsed = true;
+	canMove = false;
 }
 
 void AProjectAbyssV2Character::StartRoundhouse()
 {
 	UE_LOG(LogTemp, Warning, TEXT("We are using ROUNDHOUSE"))
 	wasRoundhouseUsed = true;
+	canMove = false;
 }
 
 void AProjectAbyssV2Character::CollidedWithProximityHitbox()
@@ -261,7 +291,7 @@ void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 	}
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime)
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount)
 {
 	if (characterState != ECharacterState::VE_Blocking) 
 	{
@@ -277,11 +307,14 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 			BeginStun();
 		}
 		
+		PerformKnockback(_knockbackAmount, _launchAmount, false);
 
 		if (otherPlayer)
 		{
 			otherPlayer->atkHit = true;
 		}
+
+	
 	}
 	else
 	{
@@ -301,10 +334,41 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 	{
 		characterState = ECharacterState::VE_Default;
 	}
-
+	PerformKnockback(_knockbackAmount,  0.0f, true);
 	if (playerHealth < 0.00f)
 	{
 		playerHealth = 0.00f;
+	}
+}
+
+void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked)
+{
+	if (_hasBlocked)
+	{
+		if (isFlipped)
+		{
+			LaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
+		}
+		else
+		{
+			LaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), false, false);
+		}
+	}
+	else
+	{
+		if (_launchAmount > 0.0f)
+		{
+			GetCharacterMovement()->GravityScale *= 0.7;
+			characterState = ECharacterState::VE_Launched;
+		}
+		if (isFlipped)
+		{
+			LaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
+		}
+		else
+		{
+			LaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), false, false);
+		}
 	}
 }
 
@@ -317,8 +381,93 @@ void AProjectAbyssV2Character::BeginStun()
 
 void AProjectAbyssV2Character::EndStun()
 {
-	characterState = ECharacterState::VE_Default;
+	if (characterState != ECharacterState::VE_Launched)
+	{
+		characterState = ECharacterState::VE_Default;
+	}
+	
 	canMove = true;
+}
+
+void AProjectAbyssV2Character::AddToInputMap(FString _input, EInputType _type)
+{
+	inputToInputTypeMap.Add(_input, _type);
+}
+
+void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
+{
+	inputBuffer.Add(_inputInfo);
+	CheckBufferForCommandType();
+}
+
+
+//probably the most fragile function in this entire game. I've handled it in a way which should make it stable
+//This checks the input buffer for commands, if it matches, the relevant attack is performed.
+//Deprecated as a more efficient method is now used
+
+void AProjectAbyssV2Character::CheckBufferForCommand()
+{
+	
+}
+
+void AProjectAbyssV2Character::CheckBufferForCommandType()
+{
+	int correctSequenceCounter = 0;
+
+	for (auto currentCommand : characterCommands)
+	{
+		for (int commandInput = 0; commandInput < currentCommand.inputTypes.Num(); ++commandInput)
+		{
+			for (int input = 0; input < inputBuffer.Num(); ++input)
+			{
+				if (input + correctSequenceCounter < inputBuffer.Num())
+				{
+					if (inputBuffer[input + correctSequenceCounter].inputType == ((currentCommand.inputTypes[commandInput])))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequance."));
+						++correctSequenceCounter;
+
+						if (correctSequenceCounter == currentCommand.inputTypes.Num())
+						{
+							StartCommand(currentCommand.name);
+						}
+
+						break;
+					}
+					else
+					{
+						UE_LOG(LogTemp, Warning, TEXT("The player broke the command sequence."));
+						correctSequenceCounter = 0;
+					}
+				}
+				else
+				{
+					UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
+					correctSequenceCounter = 0;
+				}
+			}
+		}
+	}
+}
+	
+
+void AProjectAbyssV2Character::StartCommand(FString _commandName)
+{
+	for (int currentCommand = 0; currentCommand < characterCommands.Num(); ++currentCommand)
+	{
+		if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("O Shit they're doing the %s attack"), *_commandName);
+			characterCommands[currentCommand].hasUsedCommand = true;
+
+			canMove = false;
+		}
+	}
+}
+
+void AProjectAbyssV2Character::RemovefromBuffer()
+{
+
 }
 
 

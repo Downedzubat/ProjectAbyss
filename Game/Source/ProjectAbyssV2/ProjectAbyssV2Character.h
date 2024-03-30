@@ -15,7 +15,60 @@ enum class ECharacterState : uint8
 	VE_Jumping     UMETA(DisplayName = "JUMPING"),
 	VE_Crouching   UMETA(DisplayName = "CROUCHING"),
 	VE_Stunned     UMETA(DisplayName = "STUNNED"),
-	VE_Blocking     UMETA(DisplayName = "BLOCKING")
+	VE_Blocking     UMETA(DisplayName = "BLOCKING"),
+	VE_Launched   UMETA(DisplayName = "LAUNCHED")
+};
+
+UENUM(BlueprintType)
+enum class EInputType : uint8
+{
+	E_None							UMETA(DisplayName = "NONE"),
+	E_Forward						UMETA(DisplayName = "FORWARD"),
+	E_Backward						UMETA(DisplayName = "BACKWARD"),
+	E_Jump								UMETA(DisplayName = "JUMP"),
+	E_Crouch							UMETA(DisplayName = "CROUCH"),
+	E_Block								UMETA(DisplayName = "BLOCK"),
+	E_Jab								UMETA(DisplayName = "JAB"),
+	E_Strong							UMETA(DisplayName = "STRONG"),
+	E_Fierce							UMETA(DisplayName = "FIERCE"),
+	E_Short								UMETA(DisplayName = "SHORT"),
+	E_Long								UMETA(DisplayName = "LONG"),
+	E_Roundhouse					UMETA(DisplayName = "ROUNDHOUSE"),
+	E_SpecialAttack					UMETA(DisplayName = "SPECIAL_ATTACK")
+};
+
+USTRUCT(BlueprintType)
+struct FCommand
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		FString name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		TArray<EInputType> inputTypes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		TArray<FString> inputs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		bool hasUsedCommand;
+};
+USTRUCT(BlueprintType)
+struct FInputInfo
+{
+		GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		EInputType inputType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		FString inputName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		float timeStamp;
 };
 
 UCLASS(config=Game)
@@ -135,9 +188,17 @@ protected:
 	UFUNCTION(BlueprintCallable)
 		void CollidedWithProximityHitbox();
 
+	FTimerHandle inputBufferTimerHandle;
+
+
+	float removeInputFromBufferTime;
+
+
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime);
+		void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount,  float _knockbackAmount);
+
+	void PerformKnockback(float _knockbackAmount,  float _launchAmount,  bool _hasBlocked);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 		AProjectAbyssV2Character* otherPlayer;
@@ -152,6 +213,38 @@ protected:
 	//Stun State End
 	//Can you feel it too? the whole game starting to come together
 	void EndStun();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+		float gravityScale;
+	
+	UFUNCTION(BlueprintCallable)
+		void AddToInputMap(FString _input, EInputType _type);
+
+	UFUNCTION(BlueprintCallable)
+		void AddtoBuffer(FInputInfo _inputInfo);
+
+	//Checks buffer for sequence
+	UFUNCTION(BlueprintCallable)
+		void CheckBufferForCommand();
+
+	UFUNCTION (BlueprintCallable)
+		void CheckBufferForCommandType();
+	
+	//Performs the command if it matches one on the character
+		UFUNCTION(BlueprintCallable)
+		void StartCommand(FString _commandName);
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+			TArray<FCommand> characterCommands;
+
+	UFUNCTION(BlueprintCallable)
+		void RemovefromBuffer();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		TMap<FString, EInputType> inputToInputTypeMap;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		TArray<FInputInfo> inputBuffer;
 
 	//The amount of time which an attack will stun for
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
@@ -192,6 +285,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool isCrouching;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
+		bool hasReleasedAxisInput;
+
+	//Deprecated
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commands")
+		bool hasUsedTempCommand;
+
+	//----------------------------------------------------------------------------------------------------------------------------------------------------------
 public:
 	AProjectAbyssV2Character();
 
