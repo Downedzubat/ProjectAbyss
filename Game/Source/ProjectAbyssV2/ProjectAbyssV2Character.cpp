@@ -71,10 +71,10 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	characterCommands[0].inputTypes.Add(EInputType::E_Jab);
 	characterCommands[0].hasUsedCommand = false;
 
-	characterCommands[1].name = "Command2";
-	characterCommands[1].inputs.Add("J");
-	characterCommands[1].inputs.Add("K");
-	characterCommands[1].inputs.Add("L");
+	characterCommands[1].name = "Warrior Spirit";
+	characterCommands[1].inputTypes.Add(EInputType::E_Crouch);
+	characterCommands[1].inputTypes.Add(EInputType::E_Backward);
+	characterCommands[1].inputTypes.Add(EInputType::E_Strong);
 	characterCommands[1].hasUsedCommand = false;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
