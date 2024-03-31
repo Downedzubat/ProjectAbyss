@@ -52,6 +52,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	wasShortUsed = false;
 	wasLongUsed = false;
 	wasRoundhouseUsed = false;
+	wasTerrorAtkUsed = false;
 	isFlipped = false;
 	atkHit = false;
 
@@ -59,11 +60,12 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	playerHealth = 1.00f;
 	maxDistanceApart = 600.0f;
 	stunTime = 0.0f;
+	terrorGauge = 0.0f;
 	gravityScale = GetCharacterMovement()->GravityScale;
 	canMove = true;
 	removeInputFromBufferTime = 1.0f;
 
-	characterCommands.SetNum(2);
+	characterCommands.SetNum(3);
 
 	characterCommands[0].name = "Monstrous Swing";
 	characterCommands[0].inputTypes.Add(EInputType::E_Crouch);
@@ -76,6 +78,15 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	characterCommands[1].inputTypes.Add(EInputType::E_Backward);
 	characterCommands[1].inputTypes.Add(EInputType::E_Strong);
 	characterCommands[1].hasUsedCommand = false;
+
+	characterCommands[2].name = "Super";
+	characterCommands[2].inputTypes.Add(EInputType::E_Crouch);
+	characterCommands[2].inputTypes.Add(EInputType::E_Forward);
+	characterCommands[2].inputTypes.Add(EInputType::E_Crouch);
+	characterCommands[2].inputTypes.Add(EInputType::E_Forward);
+	characterCommands[2].inputTypes.Add(EInputType::E_Fierce);
+	characterCommands[2].hasUsedSuper = false;
+	characterCommands[2].hasUsedCommand = false;
 
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
@@ -281,6 +292,19 @@ void AProjectAbyssV2Character::StartRoundhouse()
 	canMove = false;
 }
 
+void AProjectAbyssV2Character::StartTerrorAttack()
+{
+
+	if (terrorGauge > 1.0f)
+	{
+		wasTerrorAtkUsed = true;
+	}
+	if (terrorGauge < 0.00f)
+	{
+		terrorGauge = 0.00f;
+	}
+}
+
 void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 {
 	if ((characterState == ECharacterState::VE_MovingLeft && isFlipped) || (characterState == ECharacterState::VE_MovingRight && !isFlipped))
@@ -297,6 +321,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 	{
 		UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
 		playerHealth -= _damageAmount;
+		
 
 		
 		stunTime = _stunTime;
@@ -312,6 +337,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 		if (otherPlayer)
 		{
 			otherPlayer->atkHit = true;
+			otherPlayer->terrorGauge += _damageAmount * 0.85f;
 		}
 
 	
@@ -457,10 +483,16 @@ void AProjectAbyssV2Character::StartCommand(FString _commandName)
 	{
 		if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("O Shit they're doing the %s attack"), *_commandName);
 			characterCommands[currentCommand].hasUsedCommand = true;
+		}
+		if (_commandName.Compare(characterCommands[currentCommand].name) == 2)
+		{
+			characterCommands[currentCommand].hasUsedSuper = true;
+		}
 
-			canMove = false;
+		if (characterCommands[currentCommand].hasUsedSuper)
+		{
+			StartTerrorAttack();
 		}
 	}
 }

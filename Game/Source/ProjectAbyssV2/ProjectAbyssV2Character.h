@@ -54,6 +54,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		bool hasUsedCommand;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		bool hasUsedSuper;
 };
 USTRUCT(BlueprintType)
 struct FInputInfo
@@ -90,6 +93,7 @@ class AProjectAbyssV2Character : public ACharacter
 	void StartShort();
 	void StartLong();
 	void StartRoundhouse();
+	void StartTerrorAttack();
 
 	//When in keyboard only mode use following functions to allow P2 to perform actions
 	//Please do not allow people to put themselves through this
@@ -269,6 +273,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
 		bool wasRoundhouseUsed;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movelists")
+		bool wasTerrorAtkUsed;
+
 	//Player Health Stat
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
 		float playerHealth;
@@ -288,6 +295,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
 		bool hasReleasedAxisInput;
+
+	// SuperMeter (called terror for upcoming game)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meter")
+		float terrorGauge;
 
 	//Deprecated
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commands")
