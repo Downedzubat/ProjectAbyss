@@ -55,6 +55,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	wasTerrorAtkUsed = false;
 	isFlipped = false;
 	atkHit = false;
+	
 
 	hasReleasedAxisInput = true;
 	playerHealth = 1.00f;
@@ -171,7 +172,7 @@ void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 {
 	if (characterState == ECharacterState::VE_Launched || characterState == ECharacterState::VE_Jumping)
 	{
-		//ACharacter::Landed(Hit);
+		ACharacter::Landed(Hit);
 		GetCharacterMovement()->GravityScale = gravityScale;
 		characterState = ECharacterState::VE_Default;
 	}
@@ -326,13 +327,13 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 		
 		stunTime = _stunTime;
 		
-		if (stunTime > 0.0f)
+		if (characterState != ECharacterState::VE_Launched && stunTime > 0.0f)
 		{
 			characterState = ECharacterState::VE_Stunned;
 			BeginStun();
 		}
 		
-		PerformKnockback(_knockbackAmount, _launchAmount, false);
+		PerformKnockback(_knockbackAmount, _launchAmount, true);
 
 		if (otherPlayer)
 		{
@@ -345,22 +346,21 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 	else
 	{
 		float reducedDamage = _damageAmount * 0.5f;
-		UE_LOG(LogTemp, Warning, TEXT("We are taking reduced damage for %f points."), reducedDamage);
 		playerHealth -= reducedDamage;
 
 		stunTime = _blockstunTime;
 	}
 
-	if (stunTime > 0.0f)
+	if (characterState != ECharacterState::VE_Launched && stunTime > 0.0f)
 	{
 		characterState = ECharacterState::VE_Stunned;
 		BeginStun();
 	}
 	else
 	{
-		characterState = ECharacterState::VE_Default;
+		characterState = ECharacterState::VE_Launched;
 	}
-	PerformKnockback(_knockbackAmount,  0.0f, true);
+	PerformKnockback(_knockbackAmount,  0.0f, false);
 	if (playerHealth < 0.00f)
 	{
 		playerHealth = 0.00f;
@@ -369,7 +369,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 
 void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked)
 {
-	if (_hasBlocked)
+	if (characterState ==  ECharacterState::VE_Blocking)
 	{
 		if (isFlipped)
 		{
@@ -384,17 +384,21 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 	{
 		if (_launchAmount > 0.0f)
 		{
-			GetCharacterMovement()->GravityScale *= 0.7;
+			UE_LOG(LogTemp, Warning, TEXT("We're being launched for %f."), _launchAmount);
 			characterState = ECharacterState::VE_Launched;
+			GetCharacterMovement()->GravityScale *= 0.7;
+			if (isFlipped)
+			{
+				LaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
+			}
+			else
+			{
+				LaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), false, false);
+			}
+			
 		}
-		if (isFlipped)
-		{
-			LaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
-		}
-		else
-		{
-			LaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), false, false);
-		}
+
+	
 	}
 }
 
