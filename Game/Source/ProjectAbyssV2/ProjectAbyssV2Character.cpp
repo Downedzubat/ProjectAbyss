@@ -3,6 +3,7 @@
 #include "ProjectAbyssV2Character.h"
 #include "ProjectAbyssV2GameMode.h"
 #include "Camera/CameraComponent.h"
+#include "MainMenu.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -82,9 +83,6 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 
 	characterCommands[2].name = "Super";
 	characterCommands[2].inputTypes.Add(EInputType::E_Crouch);
-	characterCommands[2].inputTypes.Add(EInputType::E_Forward);
-	characterCommands[2].inputTypes.Add(EInputType::E_Crouch);
-	characterCommands[2].inputTypes.Add(EInputType::E_Forward);
 	characterCommands[2].inputTypes.Add(EInputType::E_Fierce);
 	characterCommands[2].hasUsedSuper = false;
 	characterCommands[2].hasUsedCommand = false;
@@ -100,60 +98,39 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 
 void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
-	if  (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
 	{
 		if (gameMode->player1 == this)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
-			// set up gameplay key bindings
-			PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
-			PlayerInputComponent->BindAction("Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
-			PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
-			PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
-			PlayerInputComponent->BindAxis("MoveRight", this, &AProjectAbyssV2Character::MoveRight);
-
-			PlayerInputComponent->BindTouch(IE_Pressed, this, &AProjectAbyssV2Character::TouchStarted);
-			PlayerInputComponent->BindTouch(IE_Released, this, &AProjectAbyssV2Character::TouchStopped);
-
-			//Attack Functions
-			PlayerInputComponent->BindAction("Jab", IE_Pressed, this, &AProjectAbyssV2Character::StartJab);
-
-			PlayerInputComponent->BindAction("Strong", IE_Pressed, this, &AProjectAbyssV2Character::StartStrong);
-
-			PlayerInputComponent->BindAction("Fierce", IE_Pressed, this, &AProjectAbyssV2Character::StartFierce);
-
-			PlayerInputComponent->BindAction("Short", IE_Pressed, this, &AProjectAbyssV2Character::StartShort);
-
-			PlayerInputComponent->BindAction("Long", IE_Pressed, this, &AProjectAbyssV2Character::StartLong);
-
-			PlayerInputComponent->BindAction("Roundhouse", IE_Pressed, this, &AProjectAbyssV2Character::StartRoundhouse);
+			PlayerInputComponent->BindAxis("MoveRightP1", this, &AProjectAbyssV2Character::MoveRight);
 		}
 		else
 		{
-			//PLAYER 2 STUFF
-			// set up gameplay key bindings
-			PlayerInputComponent->BindAction("JumpP2", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
-			PlayerInputComponent->BindAction("JumpP2", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
-			PlayerInputComponent->BindAction("CrouchP2", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
-			PlayerInputComponent->BindAction("CrouchP2", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
 			PlayerInputComponent->BindAxis("MoveRightP2", this, &AProjectAbyssV2Character::MoveRight);
-
-			PlayerInputComponent->BindTouch(IE_Pressed, this, &AProjectAbyssV2Character::TouchStarted);
-			PlayerInputComponent->BindTouch(IE_Released, this, &AProjectAbyssV2Character::TouchStopped);
-
-			//Attack Functions
-			PlayerInputComponent->BindAction("JabP2", IE_Pressed, this, &AProjectAbyssV2Character::StartJab);
-
-			PlayerInputComponent->BindAction("StrongP2", IE_Pressed, this, &AProjectAbyssV2Character::StartStrong);
-
-			PlayerInputComponent->BindAction("FierceP2", IE_Pressed, this, &AProjectAbyssV2Character::StartFierce);
-
-			PlayerInputComponent->BindAction("ShortP2", IE_Pressed, this, &AProjectAbyssV2Character::StartShort);
-
-			PlayerInputComponent->BindAction("LongP2", IE_Pressed, this, &AProjectAbyssV2Character::StartLong);
-
-			PlayerInputComponent->BindAction("RoundhouseP2", IE_Pressed, this, &AProjectAbyssV2Character::StartRoundhouse);
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
+		// set up gameplay key bindings
+		PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
+		PlayerInputComponent->BindAction("Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
+		PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
+		PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
+		PlayerInputComponent->BindAxis("MoveRightController", this, &AProjectAbyssV2Character::MoveRightController);
+
+		//Attack Functions
+		PlayerInputComponent->BindAction("Jab", IE_Pressed, this, &AProjectAbyssV2Character::StartJab);
+
+		PlayerInputComponent->BindAction("Strong", IE_Pressed, this, &AProjectAbyssV2Character::StartStrong);
+
+		PlayerInputComponent->BindAction("Fierce", IE_Pressed, this, &AProjectAbyssV2Character::StartFierce);
+
+		PlayerInputComponent->BindAction("Short", IE_Pressed, this, &AProjectAbyssV2Character::StartShort);
+
+		PlayerInputComponent->BindAction("Long", IE_Pressed, this, &AProjectAbyssV2Character::StartLong);
+
+		PlayerInputComponent->BindAction("Roundhouse", IE_Pressed, this, &AProjectAbyssV2Character::StartRoundhouse);
+
+		PlayerInputComponent->BindAction("DebugSuper", IE_Pressed, this, &AProjectAbyssV2Character::StartTerrorAttack);
+
 	}
 }
 
@@ -194,49 +171,115 @@ void AProjectAbyssV2Character::StopCrouching()
 
 void AProjectAbyssV2Character::MoveRight(float Value)
 {
-
-	if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking)
+	if (auto MainMenu = Cast<UMainMenu>(GetGameInstance())) 
 	{
-		if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
+		if (MainMenu->isDeviceForMultiplePlayers)
 		{
-			if (Value > 0.20f)
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking)
 			{
-				characterState = ECharacterState::VE_MovingRight;
-				hasReleasedAxisInput = false;
+				if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
+				{
+					if (Value > 0.20f)
+					{
+						characterState = ECharacterState::VE_MovingRight;
+						hasReleasedAxisInput = false;
+					}
+					else if (Value < -0.20f)
+					{
+						characterState = ECharacterState::VE_MovingLeft;
+						hasReleasedAxisInput = false;
+					}
+					else
+					{
+						characterState = ECharacterState::VE_Default;
+						hasReleasedAxisInput = true;
+					}
+				}
 			}
-			else if (Value < -0.20f)
+			if (otherPlayer) 
 			{
-				characterState = ECharacterState::VE_MovingLeft;
-				hasReleasedAxisInput = false;
-			}
-			else
-			{
-				characterState = ECharacterState::VE_Default;
-				hasReleasedAxisInput = true;
+				float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
+
+				if (currentDistanceApart >= maxDistanceApart)
+				{
+					if ((currentDistanceApart + Value < currentDistanceApart && !isFlipped) || (currentDistanceApart - Value < currentDistanceApart && isFlipped))
+					{
+						// add movement in that direction
+						if (canMove) 
+						{
+							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+						}
+
+					}
+				}
+				else
+				{
+					if (canMove)
+					{
+						// add movement in that direction
+						AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+					}
+
+				}
 			}
 		}
 	}
+}
 
-	float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
-
-	if (currentDistanceApart >= maxDistanceApart)
+void AProjectAbyssV2Character::MoveRightController(float Value)
+{
+	if (auto MainMenu = Cast<UMainMenu>(GetGameInstance()))
 	{
-		if ((currentDistanceApart + Value < currentDistanceApart && !isFlipped) || (currentDistanceApart - Value < currentDistanceApart && isFlipped))
+		if (!MainMenu->isDeviceForMultiplePlayers)
 		{
-			// add movement in that direction
-			if (canMove) {
-				AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking)
+			{
+				if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
+				{
+					if (Value > 0.20f)
+					{
+						characterState = ECharacterState::VE_MovingRight;
+						hasReleasedAxisInput = false;
+					}
+					else if (Value < -0.20f)
+					{
+						characterState = ECharacterState::VE_MovingLeft;
+						hasReleasedAxisInput = false;
+					}
+					else
+					{
+						characterState = ECharacterState::VE_Default;
+						hasReleasedAxisInput = true;
+					}
+				}
 			}
-			
+			if (otherPlayer)
+			{
+				float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
+
+				if (currentDistanceApart >= maxDistanceApart)
+				{
+					if ((currentDistanceApart + Value < currentDistanceApart && !isFlipped) || (currentDistanceApart - Value < currentDistanceApart && isFlipped))
+					{
+						// add movement in that direction
+						if (canMove)
+						{
+							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+						}
+
+					}
+				}
+				else
+				{
+					if (canMove)
+					{
+						// add movement in that direction
+						AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+					}
+
+				}
+			}
 		}
-	}
-	else
-	{
-		if (canMove) {
-			// add movement in that direction
-			AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-		}
-	
 	}
 }
 
@@ -296,9 +339,10 @@ void AProjectAbyssV2Character::StartRoundhouse()
 void AProjectAbyssV2Character::StartTerrorAttack()
 {
 
-	if (terrorGauge > 1.0f)
+	if (terrorGauge >= 1.0f)
 	{
 		wasTerrorAtkUsed = true;
+		terrorGauge = 0.0f;
 	}
 	if (terrorGauge < 0.00f)
 	{

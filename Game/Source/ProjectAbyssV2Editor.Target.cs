@@ -8,7 +8,8 @@ public class ProjectAbyssV2EditorTarget : TargetRules
 	public ProjectAbyssV2EditorTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
-		DefaultBuildSettings = BuildSettingsVersion.V2;
-		ExtraModuleNames.Add("ProjectAbyssV2");
+        DefaultBuildSettings = BuildSettingsVersion.V5;
+        IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_5;
+        ExtraModuleNames.Add("ProjectAbyssV2");
 	}
 }

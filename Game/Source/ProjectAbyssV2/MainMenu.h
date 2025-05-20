@@ -25,4 +25,7 @@ class PROJECTABYSSV2_API UMainMenu : public UGameInstance
 	public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 		ECharacterClass characterClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller")
+	bool isDeviceForMultiplePlayers;
 };
