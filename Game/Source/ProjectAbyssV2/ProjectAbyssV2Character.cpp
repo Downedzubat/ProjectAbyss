@@ -57,6 +57,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	isFlipped = false;
 	atkHit = false;
 	
+	isReadyForEntrance = false;
 
 	hasReleasedAxisInput = true;
 	playerHealth = 1.00f;
