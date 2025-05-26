@@ -23,6 +23,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 	AProjectAbyssV2Character* player2;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gamemode Settings")
+	float roundTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gamemode Settings")
+	int numRounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gamemode Settings")
+	bool isTimerActive;
+
 };
 
 

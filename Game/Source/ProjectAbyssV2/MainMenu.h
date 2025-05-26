@@ -30,4 +30,10 @@ class PROJECTABYSSV2_API UMainMenu : public UGameInstance
 	ECharacterClass P2characterClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller")
 	bool isDeviceForMultiplePlayers;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameInstance Settings")
+	int numRounds;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameInstance Settings")
+	float roundTime;
 };

@@ -46,7 +46,12 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 
 	otherPlayer = nullptr;
 	hurtbox = nullptr;
+
+	characterClass = ECharacterClass::VE_Default;
+	
 	scale = FVector(0.0f, 0.0f, 0.0f);
+	
+	
 	wasJabUsed = false;
 	wasStrongUsed = false;
 	wasFierceUsed = false;

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "MainMenu.h"
 #include "GameFramework/Character.h"
 #include "ProjectAbyssV2Character.generated.h"
 
@@ -161,6 +162,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		ECharacterState characterState;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterDetails")
+	ECharacterClass characterClass;
 	//the character's transform
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
 		FTransform transform;
