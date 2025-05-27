@@ -131,6 +131,7 @@ class AProjectAbyssV2Character : public ACharacter
 protected:
 	void Tick(float DeltaTime);
 
+
 	/** Called for side to side input */
 	void MoveRight(float Val);
 
@@ -151,10 +152,15 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool canMove;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attacks")
+	bool canAttack;
 	//Who is it?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
 		FString charName;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	FString winQuote;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 		AActor* hurtbox;
 
@@ -164,6 +170,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterDetails")
 	ECharacterClass characterClass;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
+	FTransform startPos;
 	//the character's transform
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
 		FTransform transform;
@@ -310,6 +318,39 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	bool isReadyForEntrance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	bool hasLostRound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
+	bool hasWonMatch;
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameLogic")
+	int roundsWon;
+
+
+	UFUNCTION(BlueprintCallable)
+	void WinRound();
+
+	UFUNCTION(BlueprintCallable)
+	void WinMatch();
+
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void NotifyRoundStart();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void NotifyRoundEnd();
+
+	UFUNCTION(BlueprintCallable)
+	void KO();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void NotifyKO();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void UpdateHUDRoundIcons();
 	//----------------------------------------------------------------------------------------------------------------------------------------------------------
 public:
 	AProjectAbyssV2Character();

@@ -9,6 +9,10 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
+
+
+
+
 AProjectAbyssV2Character::AProjectAbyssV2Character()
 {
 	// Set size for collision capsule
@@ -62,7 +66,10 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	isFlipped = false;
 	atkHit = false;
 	
+	roundsWon = 0;
+	hasLostRound = false;
 	isReadyForEntrance = false;
+	hasWonMatch = false;
 
 	hasReleasedAxisInput = true;
 	playerHealth = 1.00f;
@@ -302,58 +309,86 @@ void AProjectAbyssV2Character::TouchStopped(const ETouchIndex::Type FingerIndex,
 
 void AProjectAbyssV2Character::StartJab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("We are using JAB"))
-	wasJabUsed = true;
-	canMove = false;
+	if (canAttack)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("We are using JAB"))
+		wasJabUsed = true;
+		canMove = false;
+	}
+	
 }
 
 void AProjectAbyssV2Character::StartStrong()
 {
-	UE_LOG(LogTemp, Warning, TEXT("We are using STRONG"))
-	wasStrongUsed = true;
-	canMove = false;
+	if (canAttack)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("We are using STRONG"))
+		wasStrongUsed = true;
+		canMove = false;
+	}
+	
 }
 
 void AProjectAbyssV2Character::StartFierce()
 {
-	UE_LOG(LogTemp, Warning, TEXT("We are using FIERCE"))
-	wasFierceUsed = true;
-	canMove = false;
+	if (canAttack)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("We are using FIERCE"))
+		wasFierceUsed = true;
+		canMove = false;
+	}
+
 }
 
 void AProjectAbyssV2Character::StartShort()
 {
-	UE_LOG(LogTemp, Warning, TEXT("We are using SHORT"))
-	wasShortUsed = true;
-	canMove = false;
+	if (canAttack)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("We are using SHORT"))
+		wasShortUsed = true;
+		canMove = false;
+	}
+
 }
 
 void AProjectAbyssV2Character::StartLong()
 {
-	UE_LOG(LogTemp, Warning, TEXT("We are using LONG"))
-	wasLongUsed = true;
-	canMove = false;
+	if (canAttack)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("We are using LONG"))
+		wasLongUsed = true;
+		canMove = false;
+	}
+
 }
 
 void AProjectAbyssV2Character::StartRoundhouse()
 {
-	UE_LOG(LogTemp, Warning, TEXT("We are using ROUNDHOUSE"))
-	wasRoundhouseUsed = true;
-	canMove = false;
+	if (canAttack)
+	{
+		//UE_LOG(LogTemp, Warning, TEXT("We are using ROUNDHOUSE"))
+		wasRoundhouseUsed = true;
+		canMove = false;
+	}
+
 }
 
 void AProjectAbyssV2Character::StartTerrorAttack()
 {
+	if (canAttack) 
+	{
+		if (terrorGauge >= 1.0f)
+		{
+			wasTerrorAtkUsed = true;
+			terrorGauge = 0.0f;
+		}
+		if (terrorGauge < 0.00f)
+		{
+			terrorGauge = 0.00f;
+		}
 
-	if (terrorGauge >= 1.0f)
-	{
-		wasTerrorAtkUsed = true;
-		terrorGauge = 0.0f;
 	}
-	if (terrorGauge < 0.00f)
-	{
-		terrorGauge = 0.00f;
-	}
+
 }
 
 void AProjectAbyssV2Character::CollidedWithProximityHitbox()
@@ -612,6 +647,33 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
+
+void AProjectAbyssV2Character::WinRound() {
+	otherPlayer->hasLostRound = true;
+	++roundsWon;
+	NotifyRoundEnd();
+	UpdateHUDRoundIcons();
+}
+void AProjectAbyssV2Character::WinMatch()
+{
+	canMove = false;
+	canAttack = false;
+	hasWonMatch = true;
+}
+void AProjectAbyssV2Character::KO()
+{
+	if (playerHealth <= 0)
+	{
+		otherPlayer->roundsWon++;
+		hasLostRound = true;
+		NotifyKO();
+		NotifyRoundEnd();
+		UpdateHUDRoundIcons();
+	}
+}
+
+
+
 	//if (characterState != ECharacterState::VE_Jumping) {
 
 
