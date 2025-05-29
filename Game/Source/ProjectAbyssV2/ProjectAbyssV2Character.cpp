@@ -66,6 +66,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	isFlipped = false;
 	atkHit = false;
 	
+	canFlip = true;
 	roundsWon = 0;
 	hasLostRound = false;
 	isReadyForEntrance = false;
@@ -73,7 +74,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 
 	hasReleasedAxisInput = true;
 	playerHealth = 1.00f;
-	maxDistanceApart = 600.0f;
+	maxDistanceApart = 475.0f;
 	stunTime = 0.0f;
 	terrorGauge = 0.0f;
 	gravityScale = GetCharacterMovement()->GravityScale;
@@ -170,6 +171,8 @@ void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 
 void AProjectAbyssV2Character::StartCrouching()
 {
+
+	Crouch();
 	characterState = ECharacterState::VE_Crouching;
 	isCrouching = true;
 	canMove = false;
@@ -177,6 +180,8 @@ void AProjectAbyssV2Character::StartCrouching()
 
 void AProjectAbyssV2Character::StopCrouching()
 {
+
+	UnCrouch();
 	characterState = ECharacterState::VE_Default;
 	isCrouching = false;
 	canMove = true;
@@ -570,19 +575,23 @@ void AProjectAbyssV2Character::StartCommand(FString _commandName)
 {
 	for (int currentCommand = 0; currentCommand < characterCommands.Num(); ++currentCommand)
 	{
-		if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
+		if (canAttack)
 		{
-			characterCommands[currentCommand].hasUsedCommand = true;
-		}
-		if (_commandName.Compare(characterCommands[currentCommand].name) == 2)
-		{
-			characterCommands[currentCommand].hasUsedSuper = true;
+			if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
+			{
+				characterCommands[currentCommand].hasUsedCommand = true;
+			}
+			if (_commandName.Compare(characterCommands[currentCommand].name) == 2)
+			{
+				characterCommands[currentCommand].hasUsedSuper = true;
+			}
+
+			if (characterCommands[currentCommand].hasUsedSuper)
+			{
+				StartTerrorAttack();
+			}
 		}
 
-		if (characterCommands[currentCommand].hasUsedSuper)
-		{
-			StartTerrorAttack();
-		}
 	}
 }
 
@@ -646,6 +655,64 @@ void AProjectAbyssV2Character::P2KeyboardMoveRight(float _value)
 void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	/*
+		if (characterState != ECharacterState::VE_Jumping && canFlip)
+		{
+			if (otherPlayer)
+			{
+				if (otherPlayer->GetActorLocation().Y <= GetActorLocation().Y)
+				{
+					if (isFlipped)
+					{
+						GetCapsuleComponent()->GetChildrenComponents(true, capsuleChildren);
+
+						for (auto child : capsuleChildren)
+						{
+							if (child->GetName().Contains("CharacterMesh"))
+							{
+								characterMesh = child;
+								break;
+							}
+						}
+						if (characterMesh)
+						{
+							transform = characterMesh->GetRelativeTransform();
+							scale = transform.GetScale3D();
+							scale.Y = -1.0f;
+							transform.SetScale3D(scale);
+
+							characterMesh->SetRelativeTransform(transform);
+						}
+						isFlipped = false;
+					}
+				}
+				else
+				{
+					if (!isFlipped)
+					{
+						GetCapsuleComponent()->GetChildrenComponents(true, capsuleChildren);
+
+						for (auto child : capsuleChildren)
+						{
+							if (child->GetName().Contains("CharacterMesh"))
+							{
+								characterMesh = child;
+								break;
+							}
+						}
+
+						transform = characterMesh->GetRelativeTransform();
+						scale = transform.GetScale3D();
+						scale.Y = -1.0f;
+						transform.SetScale3D(scale);
+
+						characterMesh->SetRelativeTransform(transform);
+					}
+					isFlipped = true;
+				}
+			}
+		}*/
 }
 
 void AProjectAbyssV2Character::WinRound() {

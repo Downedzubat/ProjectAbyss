@@ -259,8 +259,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		TMap<FString, EInputType> inputToInputTypeMap;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool canFlip;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		TArray<FInputInfo> inputBuffer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+	TArray<USceneComponent*> capsuleChildren;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
+	USceneComponent* characterMesh;
 
 	//The amount of time which an attack will stun for
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
