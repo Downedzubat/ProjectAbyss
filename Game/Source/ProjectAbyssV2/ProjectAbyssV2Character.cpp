@@ -49,7 +49,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	GetCharacterMovement()->MaxFlySpeed = 600.f;
 
 	otherPlayer = nullptr;
-	hurtbox = nullptr;
+	//hurtboxArray* nullptr;
 
 	characterClass = ECharacterClass::VE_Default;
 	
@@ -66,6 +66,11 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	isFlipped = false;
 	atkHit = false;
 	
+	jumpHeight = 1000.0f;
+	jumpDistance = 400.0f;
+	maxJumpCount = 1;
+	jumpCount = 0;
+
 	canFlip = true;
 	roundsWon = 0;
 	hasLostRound = false;
@@ -122,26 +127,29 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 		{
 			PlayerInputComponent->BindAxis("MoveRightP2", this, &AProjectAbyssV2Character::MoveRight);
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
+
+		NotifyPlayerLockedIn();
+
+		//E_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
 		// set up gameplay key bindings
-		PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
-		PlayerInputComponent->BindAction("Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
-		PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
-		PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
+		PlayerInputComponent->BindAction("P1Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
+		PlayerInputComponent->BindAction("P1Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
+		PlayerInputComponent->BindAction("P1Crouch", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
+		PlayerInputComponent->BindAction("P1Crouch", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
 		PlayerInputComponent->BindAxis("MoveRightController", this, &AProjectAbyssV2Character::MoveRightController);
 
 		//Attack Functions
-		PlayerInputComponent->BindAction("Jab", IE_Pressed, this, &AProjectAbyssV2Character::StartJab);
+		PlayerInputComponent->BindAction("P1Jab", IE_Pressed, this, &AProjectAbyssV2Character::StartJab);
 
-		PlayerInputComponent->BindAction("Strong", IE_Pressed, this, &AProjectAbyssV2Character::StartStrong);
+		PlayerInputComponent->BindAction("P1Strong", IE_Pressed, this, &AProjectAbyssV2Character::StartStrong);
 
-		PlayerInputComponent->BindAction("Fierce", IE_Pressed, this, &AProjectAbyssV2Character::StartFierce);
+		PlayerInputComponent->BindAction("P1Fierce", IE_Pressed, this, &AProjectAbyssV2Character::StartFierce);
 
-		PlayerInputComponent->BindAction("Short", IE_Pressed, this, &AProjectAbyssV2Character::StartShort);
+		PlayerInputComponent->BindAction("P1Short", IE_Pressed, this, &AProjectAbyssV2Character::StartShort);
 
-		PlayerInputComponent->BindAction("Long", IE_Pressed, this, &AProjectAbyssV2Character::StartLong);
+		PlayerInputComponent->BindAction("P1Long", IE_Pressed, this, &AProjectAbyssV2Character::StartLong);
 
-		PlayerInputComponent->BindAction("Roundhouse", IE_Pressed, this, &AProjectAbyssV2Character::StartRoundhouse);
+		PlayerInputComponent->BindAction("P1Roundhouse", IE_Pressed, this, &AProjectAbyssV2Character::StartRoundhouse);
 
 		PlayerInputComponent->BindAction("DebugSuper", IE_Pressed, this, &AProjectAbyssV2Character::StartTerrorAttack);
 
@@ -150,8 +158,29 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 
 void AProjectAbyssV2Character::Jump()
 {
-	ACharacter::Jump();
-	characterState = ECharacterState::VE_Jumping;
+	//ACharacter::Jump();
+	if (canMove && !isCrouching && jumpCount < maxJumpCount)
+	{
+		IgnorePlayerToPlayerCollision(true);
+
+		if (characterState == ECharacterState::VE_MovingLeft)
+		{
+			CustomLaunchCharacter(FVector(0.0f, -jumpDistance, jumpHeight), true, true, true);
+		}
+		else if (characterState == ECharacterState::VE_MovingRight)
+		{
+			CustomLaunchCharacter(FVector(0.0f, jumpDistance, jumpHeight), true, true, true);
+		}
+		else
+		{
+			CustomLaunchCharacter(FVector(0.0f, 0.0f, jumpHeight), false, true, true);
+		}
+
+
+		++jumpCount;
+		characterState = ECharacterState::VE_Jumping;
+	}
+	
 }
 
 void AProjectAbyssV2Character::StopJumping()
@@ -164,10 +193,32 @@ void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 	if (characterState == ECharacterState::VE_Launched || characterState == ECharacterState::VE_Jumping)
 	{
 		ACharacter::Landed(Hit);
-		GetCharacterMovement()->GravityScale = gravityScale;
-		characterState = ECharacterState::VE_Default;
+
+		//if (characterState == ECharacterState::E_Jumping)
+		//{
+		//	if(!Cast<AHitboxActor>(Hit.Actor.Get()))
+		//	{
+		//		GetCharacterMovement()->GravityScale = gravityScale;
+		//		characterState = ECharacterState::VE_Default;
+		//	}	
+		//}
+	
 	}
+	jumpCount = 0;
+
+	IgnorePlayerToPlayerCollision(false);
 }
+
+void AProjectAbyssV2Character::CustomLaunchCharacter(FVector _launchVelocity, bool _shouldOverrideXY, bool _shouldOverrideZ, bool _shouldIgnoreCharacterCollision)
+{
+	if (_shouldIgnoreCharacterCollision)
+	{
+		IgnorePlayerToPlayerCollision(true);
+	}
+
+	LaunchCharacter(_launchVelocity, _shouldOverrideXY, _shouldOverrideZ);
+}
+
 
 void AProjectAbyssV2Character::StartCrouching()
 {
@@ -463,11 +514,11 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 	{
 		if (isFlipped)
 		{
-			LaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
+			CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
 		}
 		else
 		{
-			LaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), false, false);
+			CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), false, false);
 		}
 	}
 	else
@@ -479,11 +530,11 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 			GetCharacterMovement()->GravityScale *= 0.7;
 			if (isFlipped)
 			{
-				LaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
+				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
 			}
 			else
 			{
-				LaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), false, false);
+				CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), false, false);
 			}
 			
 		}

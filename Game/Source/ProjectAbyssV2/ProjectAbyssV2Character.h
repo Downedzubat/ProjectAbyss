@@ -20,6 +20,7 @@ enum class ECharacterState : uint8
 	VE_Launched   UMETA(DisplayName = "LAUNCHED")
 };
 
+
 UENUM(BlueprintType)
 enum class EInputType : uint8
 {
@@ -149,24 +150,97 @@ protected:
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
 	// ECharacterClass characterClass;
 
+	//Character Stat Vars
+	//Who is it?
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	FString charName;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
+	FString winQuote;
+
+	//Player Health Stat
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
+	float playerHealth;
+
+	// MOVEMENT VARS
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 		bool canMove;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attacks")
-	bool canAttack;
-	//Who is it?
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-		FString charName;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
-	FString winQuote;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		AActor* hurtbox;
-
 	//The current state of the character
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		ECharacterState characterState;
+	ECharacterState characterState;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float jumpHeight;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float jumpDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	int jumpCount;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	int maxJumpCount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool canFlip;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float gravityScale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool isCrouching;
+	//The amount of time which an attack will stun for
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float stunTime;
+
+	//ATTACK VARS
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attacks")
+	bool canAttack;
+
+	//Player Normals
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
+	bool wasJabUsed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
+	bool wasStrongUsed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
+	bool wasFierceUsed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
+	bool wasShortUsed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
+	bool wasLongUsed;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
+	bool wasRoundhouseUsed;
+
+	//HITBOX VARS
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+		TArray<UStaticMeshComponent*> hurtboxArray;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hurtbox")
+	FVector standardHurtboxScale;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hurtbox")
+	FVector standardHurtboxOffset;
+	//INPUT VARS
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TArray<FCommand> characterCommands;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TMap<FString, EInputType> inputToInputTypeMap;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TArray<FInputInfo> inputBuffer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterDetails")
 	ECharacterClass characterClass;
@@ -193,16 +267,7 @@ protected:
 	virtual void StopJumping() override;
 	virtual void Landed(const FHitResult& Hit) override;
 
-	//Make the player begin crouching
-	UFUNCTION(BlueprintCallable)
-		void StartCrouching();
 
-	//Make the player stop crouching
-	UFUNCTION(BlueprintCallable)
-		void StopCrouching();
-
-	UFUNCTION(BlueprintCallable)
-		void CollidedWithProximityHitbox();
 
 	FTimerHandle inputBufferTimerHandle;
 
@@ -210,134 +275,59 @@ protected:
 	float removeInputFromBufferTime;
 
 
-	//damage the player
-	UFUNCTION(BlueprintCallable)
-		void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount,  float _knockbackAmount);
-
-	void PerformKnockback(float _knockbackAmount,  float _launchAmount,  bool _hasBlocked);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 		AProjectAbyssV2Character* otherPlayer;
 
-	//Timer for handling stuns
-	FTimerHandle stunTimerHandle;
-
-	//Stun state start 
-	//(yes this is starting to get good)
-	void BeginStun();
-
-	//Stun State End
-	//Can you feel it too? the whole game starting to come together
-	void EndStun();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		float gravityScale;
 	
-	UFUNCTION(BlueprintCallable)
-		void AddToInputMap(FString _input, EInputType _type);
-
-	UFUNCTION(BlueprintCallable)
-		void AddtoBuffer(FInputInfo _inputInfo);
-
-	//Checks buffer for sequence
-	UFUNCTION(BlueprintCallable)
-		void CheckBufferForCommand();
-
-	UFUNCTION (BlueprintCallable)
-		void CheckBufferForCommandType();
-	
-	//Performs the command if it matches one on the character
-		UFUNCTION(BlueprintCallable)
-		void StartCommand(FString _commandName);
-
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-			TArray<FCommand> characterCommands;
-
-	UFUNCTION(BlueprintCallable)
-		void RemovefromBuffer();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		TMap<FString, EInputType> inputToInputTypeMap;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool canFlip;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		TArray<FInputInfo> inputBuffer;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	TArray<USceneComponent*> capsuleChildren;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Mesh")
 	USceneComponent* characterMesh;
-
-	//The amount of time which an attack will stun for
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		float stunTime;
-
-	//Player Normals
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
-		bool wasJabUsed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
-		bool wasStrongUsed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
-		bool wasFierceUsed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
-		bool wasShortUsed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
-		bool wasLongUsed;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
-		bool wasRoundhouseUsed;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movelists")
 		bool wasTerrorAtkUsed;
-
-	//Player Health Stat
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health")
-		float playerHealth;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera")
 		float maxDistanceApart;
-
 	//is the player's model flipped
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
 		bool isFlipped;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combos")
 		bool atkHit;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-		bool isCrouching;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
 		bool hasReleasedAxisInput;
-
 	// SuperMeter (called terror for upcoming game)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meter")
 		float terrorGauge;
-
 	//Deprecated
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Commands")
 		bool hasUsedTempCommand;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	bool isReadyForEntrance;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	bool hasLostRound;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animations")
 	bool hasWonMatch;
-
-
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameLogic")
 	int roundsWon;
 
+	// FUNCTIONS
+	
+	UFUNCTION(BlueprintCallable)
+	void CustomLaunchCharacter(FVector _launchVelocity, bool _shouldOverrideXY, bool _shouldOverrideZ, bool _shouldIgnoreCharacterCollision = false);
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void IgnorePlayerToPlayerCollision(bool _shouldIgnore);
+	//Make the player begin crouching
+	UFUNCTION(BlueprintCallable)
+	void StartCrouching();
+
+	//Make the player stop crouching
+	UFUNCTION(BlueprintCallable)
+	void StopCrouching();
+
+	UFUNCTION(BlueprintCallable)
+	void CollidedWithProximityHitbox();
 
 	UFUNCTION(BlueprintCallable)
 	void WinRound();
@@ -359,6 +349,46 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateHUDRoundIcons();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void NotifyPlayerLockedIn();
+
+	//Timer for handling stuns
+	FTimerHandle stunTimerHandle;
+
+	//Stun state start 
+	//(yes this is starting to get good)
+	void BeginStun();
+
+	//Stun State End
+	//Can you feel it too? the whole game starting to come together
+	void EndStun();
+
+	UFUNCTION(BlueprintCallable)
+	void RemovefromBuffer();
+
+	//damage the player
+	UFUNCTION(BlueprintCallable)
+	void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount);
+
+	void PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked);
+
+	UFUNCTION(BlueprintCallable)
+	void AddToInputMap(FString _input, EInputType _type);
+
+	UFUNCTION(BlueprintCallable)
+	void AddtoBuffer(FInputInfo _inputInfo);
+
+	//Checks buffer for sequence
+	UFUNCTION(BlueprintCallable)
+	void CheckBufferForCommand();
+
+	UFUNCTION(BlueprintCallable)
+	void CheckBufferForCommandType();
+
+	//Performs the command if it matches one on the character
+	UFUNCTION(BlueprintCallable)
+	void StartCommand(FString _commandName);
 	//----------------------------------------------------------------------------------------------------------------------------------------------------------
 public:
 	AProjectAbyssV2Character();
