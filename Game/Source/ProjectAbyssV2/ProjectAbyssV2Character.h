@@ -79,6 +79,19 @@ public:
 	bool wasUsed;
 };
 
+USTRUCT(BlueprintType)
+struct FDefaultHurtboxDetails
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hurtboxes")
+	FVector scale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hurtboxes")
+	FVector offset;
+};
+
 UCLASS(config=Game)
 class AProjectAbyssV2Character : public ACharacter
 {
@@ -233,12 +246,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 		TArray<UStaticMeshComponent*> hurtboxArray;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hurtbox")
-	FVector standardHurtboxScale;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hurtboxes")
+	TArray<FDefaultHurtboxDetails> hurtboxDefaults;
 
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hurtbox")
-	FVector standardHurtboxOffset;
 	//INPUT VARS
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
