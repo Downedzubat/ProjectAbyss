@@ -51,8 +51,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		TArray<EInputType> inputTypes;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		TArray<FString> inputs;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+		TArray<FString> inputs;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		bool hasUsedCommand;
@@ -74,6 +74,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		float timeStamp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	bool wasUsed;
 };
 
 UCLASS(config=Game)
@@ -193,6 +196,13 @@ protected:
 	//The amount of time which an attack will stun for
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float stunTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float forwardDashDistance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float backDashDistance;
+
 
 	//ATTACK VARS
 
@@ -344,8 +354,15 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void KO();
 
+
+	UFUNCTION(BlueprintCallable)
+	void DoubleKO();
+
 	UFUNCTION(BlueprintImplementableEvent)
 	void NotifyKO();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void NotifyDoubleKO();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateHUDRoundIcons();
@@ -380,9 +397,6 @@ protected:
 	void AddtoBuffer(FInputInfo _inputInfo);
 
 	//Checks buffer for sequence
-	UFUNCTION(BlueprintCallable)
-	void CheckBufferForCommand();
-
 	UFUNCTION(BlueprintCallable)
 	void CheckBufferForCommandType();
 

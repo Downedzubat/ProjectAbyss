@@ -71,6 +71,9 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	maxJumpCount = 1;
 	jumpCount = 0;
 
+	forwardDashDistance = 800.0f;
+	backDashDistance = 600.0f;
+
 	canFlip = true;
 	roundsWon = 0;
 	hasLostRound = false;
@@ -86,7 +89,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	canMove = true;
 	removeInputFromBufferTime = 1.0f;
 
-	characterCommands.SetNum(3);
+	characterCommands.SetNum(5);
 
 	characterCommands[0].name = "Monstrous Swing";
 	characterCommands[0].inputTypes.Add(EInputType::E_Crouch);
@@ -106,6 +109,15 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	characterCommands[2].hasUsedSuper = false;
 	characterCommands[2].hasUsedCommand = false;
 
+	characterCommands[3].name = "Forward Dash";
+	characterCommands[3].inputTypes.Add(EInputType::E_Forward);
+	characterCommands[3].inputTypes.Add(EInputType::E_Forward);
+	characterCommands[3].hasUsedCommand = false;
+
+	characterCommands[4].name = "Back Dash";
+	characterCommands[4].inputTypes.Add(EInputType::E_Backward);
+	characterCommands[4].inputTypes.Add(EInputType::E_Backward);
+	characterCommands[4].hasUsedCommand = false;
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -567,6 +579,16 @@ void AProjectAbyssV2Character::AddToInputMap(FString _input, EInputType _type)
 
 void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 {
+	if (!isFlipped)
+	{
+		if (_inputInfo.inputType == EInputType::E_Backward)
+			_inputInfo.inputType = EInputType::E_Forward;
+		else if (_inputInfo.inputType == EInputType::E_Forward)
+		{
+			_inputInfo.inputType = EInputType::E_Backward;
+		}
+	}
+
 	inputBuffer.Add(_inputInfo);
 	CheckBufferForCommandType();
 }
@@ -576,10 +598,6 @@ void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 //This checks the input buffer for commands, if it matches, the relevant attack is performed.
 //Deprecated as a more efficient method is now used
 
-void AProjectAbyssV2Character::CheckBufferForCommand()
-{
-	
-}
 
 void AProjectAbyssV2Character::CheckBufferForCommandType()
 {
@@ -587,33 +605,40 @@ void AProjectAbyssV2Character::CheckBufferForCommandType()
 
 	for (auto currentCommand : characterCommands)
 	{
+		for (int input = 0; input < inputBuffer.Num(); ++input)
+		{
+			inputBuffer[input].wasUsed = false;
+		}
+
 		for (int commandInput = 0; commandInput < currentCommand.inputTypes.Num(); ++commandInput)
 		{
 			for (int input = 0; input < inputBuffer.Num(); ++input)
 			{
 				if (input + correctSequenceCounter < inputBuffer.Num())
 				{
-					if (inputBuffer[input + correctSequenceCounter].inputType == ((currentCommand.inputTypes[commandInput])))
+					if (!inputBuffer[input + correctSequenceCounter].wasUsed && inputBuffer[input + correctSequenceCounter].inputType == ((currentCommand.inputTypes[commandInput])))
 					{
-						UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequance."));
+						//UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequance."));
+						inputBuffer[input + correctSequenceCounter].wasUsed = true;
 						++correctSequenceCounter;
 
 						if (correctSequenceCounter == currentCommand.inputTypes.Num())
 						{
 							StartCommand(currentCommand.name);
+							correctSequenceCounter = 0;
 						}
 
 						break;
 					}
 					else
 					{
-						UE_LOG(LogTemp, Warning, TEXT("The player broke the command sequence."));
+						//UE_LOG(LogTemp, Warning, TEXT("The player broke the command sequence."));
 						correctSequenceCounter = 0;
 					}
 				}
 				else
 				{
-					UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
+					//UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
 					correctSequenceCounter = 0;
 				}
 			}
@@ -630,6 +655,7 @@ void AProjectAbyssV2Character::StartCommand(FString _commandName)
 		{
 			if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
 			{
+				UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *_commandName);
 				characterCommands[currentCommand].hasUsedCommand = true;
 			}
 			if (_commandName.Compare(characterCommands[currentCommand].name) == 2)
@@ -782,12 +808,34 @@ void AProjectAbyssV2Character::KO()
 {
 	if (playerHealth <= 0)
 	{
-		otherPlayer->roundsWon++;
-		hasLostRound = true;
-		NotifyKO();
-		NotifyRoundEnd();
-		UpdateHUDRoundIcons();
+		if (otherPlayer->playerHealth <= 0)
+		{
+			DoubleKO();
+		}
+		else
+		{
+			otherPlayer->roundsWon++;
+			hasLostRound = true;
+			NotifyKO();
+			NotifyRoundEnd();
+			UpdateHUDRoundIcons();
+		}
+
 	}
+}
+
+void AProjectAbyssV2Character::DoubleKO()
+{
+	
+	roundsWon++;
+	otherPlayer->roundsWon++;
+	hasLostRound = true;
+	otherPlayer->hasLostRound = true;
+	
+
+	NotifyDoubleKO();
+	NotifyRoundEnd();
+	UpdateHUDRoundIcons();
 }
 
 
