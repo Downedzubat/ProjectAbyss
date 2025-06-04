@@ -74,6 +74,8 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	forwardDashDistance = 800.0f;
 	backDashDistance = 600.0f;
 
+	hitstopModifier = 1.0f;
+
 	canFlip = true;
 	roundsWon = 0;
 	hasLostRound = false;
@@ -239,6 +241,32 @@ void AProjectAbyssV2Character::StartCrouching()
 	characterState = ECharacterState::VE_Crouching;
 	isCrouching = true;
 	canMove = false;
+}
+
+void AProjectAbyssV2Character::BeginHitstop(float _damageAmount)
+{
+	CustomTimeDilation = 0.0f;
+	otherPlayer->CustomTimeDilation = 0.0f;
+	float hitstopTime = _damageAmount * hitstopModifier;
+
+	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		gameMode->isTimerActive = true;
+	}
+
+	GetWorld()->GetTimerManager().SetTimer(hitstopTimerHandle, this, &AProjectAbyssV2Character::EndHitstop, hitstopTime, false);
+}
+
+void AProjectAbyssV2Character::EndHitstop()
+{
+	CustomTimeDilation = 1.0f;
+	otherPlayer->CustomTimeDilation = 1.0f;
+
+	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		gameMode->isTimerActive = true;
+	}
+
 }
 
 void AProjectAbyssV2Character::StopCrouching()
@@ -486,6 +514,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 			BeginStun();
 		}
 		
+		//BeginHitstop(_damageAmount);
 		PerformKnockback(_knockbackAmount, _launchAmount, true);
 
 		if (otherPlayer)
@@ -500,6 +529,8 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 	{
 		float reducedDamage = _damageAmount * 0.5f;
 		playerHealth -= reducedDamage;
+
+		//BeginHitstop(reducedDamage);
 
 		stunTime = _blockstunTime;
 	}
@@ -624,7 +655,7 @@ void AProjectAbyssV2Character::CheckBufferForCommandType()
 
 						if (correctSequenceCounter == currentCommand.inputTypes.Num())
 						{
-							StartCommand(currentCommand.name);
+							moveBuffer.Add(currentCommand);
 							correctSequenceCounter = 0;
 						}
 
@@ -643,6 +674,26 @@ void AProjectAbyssV2Character::CheckBufferForCommandType()
 				}
 			}
 		}
+	}
+}
+
+
+
+void AProjectAbyssV2Character::DetermineCommandToUse()
+{
+	if (moveBuffer.Num() > 0)
+	{
+		FCommand moveToUse = moveBuffer[0];
+		for (int i = 1; i < moveBuffer.Num(); ++i)
+		{
+			if (moveToUse.inputTypes.Num() < moveBuffer[i].inputTypes.Num())
+			{
+				moveToUse = moveBuffer[i];
+			}
+		}
+
+		StartCommand(moveToUse.name);
+		moveBuffer.Empty();
 	}
 }
 	
@@ -733,6 +784,8 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+
+	DetermineCommandToUse();
 	/*
 		if (characterState != ECharacterState::VE_Jumping && canFlip)
 		{

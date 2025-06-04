@@ -216,9 +216,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float backDashDistance;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float hitstopModifier;
+
 
 	//ATTACK VARS
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attacks")
 	bool canAttack;
 
@@ -262,6 +264,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FInputInfo> inputBuffer;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TArray<FCommand> moveBuffer;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterDetails")
 	ECharacterClass characterClass;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
@@ -290,6 +295,8 @@ protected:
 
 
 	FTimerHandle inputBufferTimerHandle;
+
+	FTimerHandle hitstopTimerHandle;
 
 
 	float removeInputFromBufferTime;
@@ -342,6 +349,10 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void StartCrouching();
 
+	void BeginHitstop(float _damageAmount);
+
+	void EndHitstop();
+
 	//Make the player stop crouching
 	UFUNCTION(BlueprintCallable)
 	void StopCrouching();
@@ -360,6 +371,7 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void NotifyRoundEnd();
+
 
 	UFUNCTION(BlueprintCallable)
 	void KO();
@@ -409,6 +421,10 @@ protected:
 	//Checks buffer for sequence
 	UFUNCTION(BlueprintCallable)
 	void CheckBufferForCommandType();
+
+	//Determine which command should be executed based on specific criteria
+	UFUNCTION(BlueprintCallable)
+	void DetermineCommandToUse();
 
 	//Performs the command if it matches one on the character
 	UFUNCTION(BlueprintCallable)
