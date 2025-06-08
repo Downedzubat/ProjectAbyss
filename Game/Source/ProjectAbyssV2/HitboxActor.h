@@ -14,6 +14,19 @@ enum class EHitboxEnum : uint8
 	HB_THROW        UMETA(DisplayName = "Throw"),
 	HB_HURTBOX		UMETA(DisplayName = "Hurtbox")
 };
+
+//Used to specify if a hitbox can essentially void certain guard types, for example, low beats standing block
+UENUM(BlueprintType)
+enum class EHitType : uint8
+{
+	E_LOW		UMETA(DisplayName = "Low"),
+	E_MID		UMETA(DisplayName = "Mid"),
+	E_HIGH		UMETA(DisplayName = "High"),
+	E_OVERHEAD	UMETA(DisplayName = "Overhead"),
+	E_NONE		UMETA(DisplayName = "None")
+};
+
+
 UCLASS()
 class PROJECTABYSSV2_API AHitboxActor : public AActor
 {
@@ -56,6 +69,9 @@ public:
 	//Hitbox Enum instance
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 		EHitboxEnum hitboxType;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+		EHitType hitType;
 
 	//Hitbox location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")

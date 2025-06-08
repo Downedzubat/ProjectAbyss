@@ -173,7 +173,7 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 void AProjectAbyssV2Character::Jump()
 {
 	//ACharacter::Jump();
-	if (canMove && !isCrouching && jumpCount < maxJumpCount)
+	if (canMove && !isCrouching && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned && jumpCount < maxJumpCount)
 	{
 		IgnorePlayerToPlayerCollision(true);
 
@@ -236,11 +236,13 @@ void AProjectAbyssV2Character::CustomLaunchCharacter(FVector _launchVelocity, bo
 
 void AProjectAbyssV2Character::StartCrouching()
 {
+	if (canMove && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned && characterState != ECharacterState::VE_Jumping) {
+		Crouch();
+		characterState = ECharacterState::VE_Crouching;
+		isCrouching = true;
+		canMove = false;
+	}
 
-	Crouch();
-	characterState = ECharacterState::VE_Crouching;
-	isCrouching = true;
-	canMove = false;
 }
 
 void AProjectAbyssV2Character::BeginHitstop(float _damageAmount)
@@ -271,11 +273,13 @@ void AProjectAbyssV2Character::EndHitstop()
 
 void AProjectAbyssV2Character::StopCrouching()
 {
-
-	UnCrouch();
-	characterState = ECharacterState::VE_Default;
-	isCrouching = false;
-	canMove = true;
+	if (characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	{
+		UnCrouch();
+		characterState = ECharacterState::VE_Default;
+		isCrouching = false;
+		canMove = true;
+	}
 }
 
 void AProjectAbyssV2Character::MoveRight(float Value)
@@ -284,7 +288,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 	{
 		if (MainMenu->isDeviceForMultiplePlayers)
 		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking)
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 			{
 				if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
 				{
@@ -341,7 +345,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 	{
 		if (!MainMenu->isDeviceForMultiplePlayers)
 		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking)
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 			{
 				if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
 				{
@@ -405,7 +409,7 @@ void AProjectAbyssV2Character::TouchStopped(const ETouchIndex::Type FingerIndex,
 
 void AProjectAbyssV2Character::StartJab()
 {
-	if (canAttack)
+	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using JAB"))
 		wasJabUsed = true;
@@ -416,7 +420,7 @@ void AProjectAbyssV2Character::StartJab()
 
 void AProjectAbyssV2Character::StartStrong()
 {
-	if (canAttack)
+	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using STRONG"))
 		wasStrongUsed = true;
@@ -427,7 +431,7 @@ void AProjectAbyssV2Character::StartStrong()
 
 void AProjectAbyssV2Character::StartFierce()
 {
-	if (canAttack)
+	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using FIERCE"))
 		wasFierceUsed = true;
@@ -438,7 +442,7 @@ void AProjectAbyssV2Character::StartFierce()
 
 void AProjectAbyssV2Character::StartShort()
 {
-	if (canAttack)
+	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using SHORT"))
 		wasShortUsed = true;
@@ -449,7 +453,7 @@ void AProjectAbyssV2Character::StartShort()
 
 void AProjectAbyssV2Character::StartLong()
 {
-	if (canAttack)
+	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using LONG"))
 		wasLongUsed = true;
@@ -460,7 +464,7 @@ void AProjectAbyssV2Character::StartLong()
 
 void AProjectAbyssV2Character::StartRoundhouse()
 {
-	if (canAttack)
+	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using ROUNDHOUSE"))
 		wasRoundhouseUsed = true;
@@ -471,7 +475,7 @@ void AProjectAbyssV2Character::StartRoundhouse()
 
 void AProjectAbyssV2Character::StartTerrorAttack()
 {
-	if (canAttack) 
+	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
 	{
 		if (terrorGauge >= 1.0f)
 		{
@@ -497,9 +501,11 @@ void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 	}
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount)
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount, EHitType _hitType)
 {
-	if (characterState != ECharacterState::VE_Blocking) 
+	if (!((characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_HIGH || _hitType == EHitType::E_OVERHEAD) ||
+		(characterState == ECharacterState::VE_Blocking && !isCrouching && _hitType == EHitType::E_MID) ||
+		(characterState == ECharacterState::VE_Blocking && isCrouching && _hitType == EHitType::E_LOW)))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
 		playerHealth -= _damageAmount;
@@ -510,7 +516,24 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 		
 		if (characterState != ECharacterState::VE_Launched && stunTime > 0.0f)
 		{
-			characterState = ECharacterState::VE_Stunned;
+			switch (_hitType)
+			{
+			case EHitType::E_OVERHEAD:
+				characterState = ECharacterState::VE_HighStunned;
+				break;
+			case EHitType::E_HIGH:
+				characterState = ECharacterState::VE_HighStunned;
+				break;
+			case EHitType::E_MID:
+				characterState = ECharacterState::VE_MidStunned;
+				break;
+			case EHitType::E_LOW:
+				characterState = ECharacterState::VE_LowStunned;
+				break;
+			case EHitType::E_NONE:
+				break;
+			}
+			
 			BeginStun();
 		}
 		
@@ -537,7 +560,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 
 	if (characterState != ECharacterState::VE_Launched && stunTime > 0.0f)
 	{
-		characterState = ECharacterState::VE_Stunned;
+		characterState = ECharacterState::VE_LowStunned;
 		BeginStun();
 	}
 	else
@@ -620,7 +643,16 @@ void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 		}
 	}
 
-	inputBuffer.Add(_inputInfo);
+	if (!capturedInputThisFrame)
+	{
+		inputBuffer[curTick] =_inputInfo;
+		capturedInputThisFrame = true;
+	}
+	else
+	{
+		//multiple inputs performed on same frame
+	}
+	
 	CheckBufferForCommandType();
 }
 
@@ -633,45 +665,37 @@ void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 void AProjectAbyssV2Character::CheckBufferForCommandType()
 {
 	int correctSequenceCounter = 0;
+	int64 lastSuccessfulInputFrame = -1;
 
 	for (auto currentCommand : characterCommands)
 	{
-		for (int input = 0; input < inputBuffer.Num(); ++input)
+		correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+
+		for (unsigned int input = 0; input < inputBuffer.Capacity(); ++input)
 		{
 			inputBuffer[input].wasUsed = false;
 		}
 
-		for (int commandInput = 0; commandInput < currentCommand.inputTypes.Num(); ++commandInput)
+
+		for (int frame = 0; frame < currentCommand.maxFramesBetweenInputs; ++frame)
 		{
-			for (int input = 0; input < inputBuffer.Num(); ++input)
+			int frameDataToCheck = (curTick - frame + inputBuffer.Capacity()) % inputBuffer.Capacity();
+			EInputType type = inputBuffer[frameDataToCheck].inputType;
+
+			if (type == currentCommand.inputTypes[correctSequenceCounter])
 			{
-				if (input + correctSequenceCounter < inputBuffer.Num())
-				{
-					if (!inputBuffer[input + correctSequenceCounter].wasUsed && inputBuffer[input + correctSequenceCounter].inputType == ((currentCommand.inputTypes[commandInput])))
-					{
-						//UE_LOG(LogTemp, Warning, TEXT("The player added another input to the command sequance."));
-						inputBuffer[input + correctSequenceCounter].wasUsed = true;
-						++correctSequenceCounter;
+				--correctSequenceCounter;
+				inputBuffer[frameDataToCheck].wasUsed = true;
+			}
+			else if (type != EInputType::E_None)
+			{
+				correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+			}
 
-						if (correctSequenceCounter == currentCommand.inputTypes.Num())
-						{
-							moveBuffer.Add(currentCommand);
-							correctSequenceCounter = 0;
-						}
-
-						break;
-					}
-					else
-					{
-						//UE_LOG(LogTemp, Warning, TEXT("The player broke the command sequence."));
-						correctSequenceCounter = 0;
-					}
-				}
-				else
-				{
-					//UE_LOG(LogTemp, Warning, TEXT("The player is not yet finished with the command sequence."));
-					correctSequenceCounter = 0;
-				}
+			if (correctSequenceCounter == -1)
+			{
+				moveBuffer.Add(currentCommand);
+				break;
 			}
 		}
 	}
@@ -784,6 +808,28 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+	if (curTick < 59)
+	{
+		++curTick;
+	}
+	else
+	{
+		curTick = 0;
+	}
+
+	if (!capturedInputThisFrame)
+	{
+		FInputInfo noneInput;
+		noneInput.inputType = EInputType::E_None;
+		noneInput.frame = GFrameCounter;
+		noneInput.wasUsed = false;
+
+		inputBuffer[curTick] = noneInput;
+	}
+	else
+	{
+		capturedInputThisFrame = false;
+	}
 
 	DetermineCommandToUse();
 	/*

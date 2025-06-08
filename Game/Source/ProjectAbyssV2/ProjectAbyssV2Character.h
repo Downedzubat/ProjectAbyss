@@ -5,6 +5,8 @@
 #include "CoreMinimal.h"
 #include "MainMenu.h"
 #include "GameFramework/Character.h"
+#include "HitboxActor.h"
+#include "Containers/CircularBuffer.h"
 #include "ProjectAbyssV2Character.generated.h"
 
 UENUM(BlueprintType)
@@ -15,9 +17,15 @@ enum class ECharacterState : uint8
 	VE_MovingLeft  UMETA(DisplayName = "MOVING_LEFT"),
 	VE_Jumping     UMETA(DisplayName = "JUMPING"),
 	VE_Crouching   UMETA(DisplayName = "CROUCHING"),
-	VE_Stunned     UMETA(DisplayName = "STUNNED"),
-	VE_Blocking     UMETA(DisplayName = "BLOCKING"),
-	VE_Launched   UMETA(DisplayName = "LAUNCHED")
+	VE_MidStunned  UMETA(DisplayName = "MIDHIT"),
+	VE_LowStunned  UMETA(DisplayName = "LOWHIT"),
+	VE_HighStunned UMETA(DisplayName = "HIGHHIT"),
+	VE_Knockdown   UMETA(DisplayName = "KNOCKDOWN"),
+	VE_Recovery    UMETA(DisplayName = "RECOVERY"),
+	VE_FloorBounce UMETA(Displayname = "FLOOR_BOUNCE"),
+	VE_WallBounce  UMETA(DisplayName = "WALL_BOUNCE"),
+	VE_Blocking    UMETA(DisplayName = "BLOCKING"),
+	VE_Launched    UMETA(DisplayName = "LAUNCHED")
 };
 
 
@@ -55,6 +63,9 @@ public:
 		TArray<FString> inputs;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	int64 maxFramesBetweenInputs = 12;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		bool hasUsedCommand;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -67,13 +78,10 @@ struct FInputInfo
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		EInputType inputType;
+	EInputType inputType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		FString inputName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		float timeStamp;
+	int64 frame;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool wasUsed;
@@ -261,8 +269,9 @@ protected:
 	TMap<FString, EInputType> inputToInputTypeMap;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	TArray<FInputInfo> inputBuffer;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TCircularBuffer<FInputInfo> inputBuffer = TCircularBuffer<FInputInfo>(60);
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FCommand> moveBuffer;
@@ -338,6 +347,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameLogic")
 	int roundsWon;
 
+	int curTick;
+	bool capturedInputThisFrame;
+
 	// FUNCTIONS
 	
 	UFUNCTION(BlueprintCallable)
@@ -408,7 +420,7 @@ protected:
 
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount);
+	void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount, EHitType _HitType);
 
 	void PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked);
 
