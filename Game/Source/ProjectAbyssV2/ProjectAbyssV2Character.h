@@ -17,17 +17,22 @@ enum class ECharacterState : uint8
 	VE_MovingLeft  UMETA(DisplayName = "MOVING_LEFT"),
 	VE_Jumping     UMETA(DisplayName = "JUMPING"),
 	VE_Crouching   UMETA(DisplayName = "CROUCHING"),
-	VE_MidStunned  UMETA(DisplayName = "MIDHIT"),
-	VE_LowStunned  UMETA(DisplayName = "LOWHIT"),
-	VE_HighStunned UMETA(DisplayName = "HIGHHIT"),
-	VE_Knockdown   UMETA(DisplayName = "KNOCKDOWN"),
-	VE_Recovery    UMETA(DisplayName = "RECOVERY"),
-	VE_FloorBounce UMETA(Displayname = "FLOOR_BOUNCE"),
-	VE_WallBounce  UMETA(DisplayName = "WALL_BOUNCE"),
-	VE_Blocking    UMETA(DisplayName = "BLOCKING"),
-	VE_Launched    UMETA(DisplayName = "LAUNCHED")
+	VE_Blocking    UMETA(DisplayName = "BLOCKING")
 };
 
+UENUM(BlueprintType)
+enum class EComboState : uint8
+{
+	E_None	UMETA(DisplayName = "NO_COMBO_STATE"),
+	E_MidStunned  UMETA(DisplayName = "MIDHIT"),
+	E_LowStunned  UMETA(DisplayName = "LOWHIT"),
+	E_HighStunned UMETA(DisplayName = "HIGHHIT"),
+	E_Knockdown   UMETA(DisplayName = "KNOCKDOWN"),
+	E_Recovery    UMETA(DisplayName = "RECOVERY"),
+	E_FloorBounce UMETA(Displayname = "FLOOR_BOUNCE"),
+	E_WallBounce  UMETA(DisplayName = "WALL_BOUNCE"),
+	E_Launched    UMETA(DisplayName = "LAUNCHED")
+};
 
 UENUM(BlueprintType)
 enum class EInputType : uint8
@@ -44,7 +49,28 @@ enum class EInputType : uint8
 	E_Short								UMETA(DisplayName = "SHORT"),
 	E_Long								UMETA(DisplayName = "LONG"),
 	E_Roundhouse					UMETA(DisplayName = "ROUNDHOUSE"),
-	E_SpecialAttack					UMETA(DisplayName = "SPECIAL_ATTACK")
+	//E_SpecialAttack					UMETA(DisplayName = "SPECIAL_ATTACK")
+};
+
+UENUM(BlueprintType)
+enum class EInputStatus : uint8
+{
+	E_None		UMETA(DisplayName = "NONE"),
+	E_Press		UMETA(DisplayName = "PRESS"),
+	E_Release	UMETA(DisplayName = "RELEASE"),
+	E_Hold		UMETA(DisplayName = "HOLD")
+};
+
+USTRUCT(BlueprintType)
+struct FCommandInput
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	EInputType inputType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	EInputStatus inputStatus;
 };
 
 USTRUCT(BlueprintType)
@@ -57,7 +83,7 @@ public:
 		FString name;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		TArray<EInputType> inputTypes;
+		TArray<FCommandInput> inputTypes;
 
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		TArray<FString> inputs;*/
@@ -79,12 +105,13 @@ struct FInputInfo
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	EInputType inputType;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	EInputStatus inputStatus;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	int64 frame;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	bool wasUsed;
 };
 
 USTRUCT(BlueprintType)
@@ -191,9 +218,12 @@ protected:
 		bool canMove;
 
 	//The current state of the character
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Details")
 	ECharacterState characterState;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Details")
+	EComboState comboState;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float jumpHeight;
 
@@ -214,9 +244,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool isCrouching;
-	//The amount of time which an attack will stun for
+
+	//The amount of frames which an attack will stun for
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	float stunTime;
+	int stunFrames;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float forwardDashDistance;
@@ -301,16 +332,9 @@ protected:
 	virtual void StopJumping() override;
 	virtual void Landed(const FHitResult& Hit) override;
 
-
-
-	FTimerHandle inputBufferTimerHandle;
-
-	FTimerHandle hitstopTimerHandle;
-
-
 	float removeInputFromBufferTime;
 
-
+	bool isPressingBackward;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 		AProjectAbyssV2Character* otherPlayer;
@@ -327,7 +351,7 @@ protected:
 		float maxDistanceApart;
 	//is the player's model flipped
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Model")
-		bool isFlipped;
+		bool isFacingRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combos")
 		bool atkHit;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
@@ -355,15 +379,18 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void CustomLaunchCharacter(FVector _launchVelocity, bool _shouldOverrideXY, bool _shouldOverrideZ, bool _shouldIgnoreCharacterCollision = false);
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void IgnorePlayerToPlayerCollision(bool _shouldIgnore);
 	//Make the player begin crouching
 	UFUNCTION(BlueprintCallable)
 	void StartCrouching();
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void MoveCharacterSmoothly(FVector _start, FVector _end);
+
 	void BeginHitstop(float _damageAmount);
 
-	void EndHitstop();
+	
 
 	//Make the player stop crouching
 	UFUNCTION(BlueprintCallable)
@@ -420,7 +447,7 @@ protected:
 
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount, EHitType _HitType);
+	void TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _HitType);
 
 	void PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked);
 
@@ -441,10 +468,18 @@ protected:
 	//Performs the command if it matches one on the character
 	UFUNCTION(BlueprintCallable)
 	void StartCommand(FString _commandName);
+
+
+	UFUNCTION(BlueprintCallable)
+	void StartProxBlock();
+
+	UFUNCTION(BlueprintCallable)
+	void StopProxBlock();
+
 	//----------------------------------------------------------------------------------------------------------------------------------------------------------
 public:
 	AProjectAbyssV2Character();
-
+	void EndHitstop();
 	/** Returns SideViewCameraComponent subobject **/
 	//FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
 	/** Returns CameraBoom subobject **/

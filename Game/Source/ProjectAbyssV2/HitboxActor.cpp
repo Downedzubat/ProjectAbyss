@@ -10,8 +10,8 @@ AHitboxActor::AHitboxActor()
 	PrimaryActorTick.bCanEverTick = true;
 
 	hitboxDamage = 0.0f;
-	hitstunTime = 0.0f;
-	blockStunTime = 0.0f;
+	hitstunFrames = 0;
+	blockStunFrames = 0;
 	knockbackAmount = 0.0f;
 	launchDistance = 0.0f;
 }

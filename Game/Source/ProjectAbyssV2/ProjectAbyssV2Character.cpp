@@ -51,6 +51,9 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	otherPlayer = nullptr;
 	//hurtboxArray* nullptr;
 
+
+	characterState = ECharacterState::VE_Default;
+	comboState = EComboState::E_None;
 	characterClass = ECharacterClass::VE_Default;
 	
 	scale = FVector(0.0f, 0.0f, 0.0f);
@@ -63,18 +66,19 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	wasLongUsed = false;
 	wasRoundhouseUsed = false;
 	wasTerrorAtkUsed = false;
-	isFlipped = false;
+	isFacingRight = false;
 	atkHit = false;
 	
 	jumpHeight = 1000.0f;
 	jumpDistance = 400.0f;
 	maxJumpCount = 1;
 	jumpCount = 0;
+	isPressingBackward = false;
 
 	forwardDashDistance = 800.0f;
 	backDashDistance = 600.0f;
 
-	hitstopModifier = 1.0f;
+	hitstopModifier = 100.0f;
 
 	canFlip = true;
 	roundsWon = 0;
@@ -85,12 +89,13 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	hasReleasedAxisInput = true;
 	playerHealth = 1.00f;
 	maxDistanceApart = 475.0f;
-	stunTime = 0.0f;
+	stunFrames = 0;
 	terrorGauge = 0.0f;
 	gravityScale = GetCharacterMovement()->GravityScale;
 	canMove = true;
 	removeInputFromBufferTime = 1.0f;
 
+	/*
 	characterCommands.SetNum(5);
 
 	characterCommands[0].name = "Monstrous Swing";
@@ -120,6 +125,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	characterCommands[4].inputTypes.Add(EInputType::E_Backward);
 	characterCommands[4].inputTypes.Add(EInputType::E_Backward);
 	characterCommands[4].hasUsedCommand = false;
+	*/
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -173,17 +179,17 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 void AProjectAbyssV2Character::Jump()
 {
 	//ACharacter::Jump();
-	if (canMove && !isCrouching && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned && jumpCount < maxJumpCount)
+	if (canMove && !isCrouching && comboState == EComboState::E_None)
 	{
 		IgnorePlayerToPlayerCollision(true);
 
 		if (characterState == ECharacterState::VE_MovingLeft)
 		{
-			CustomLaunchCharacter(FVector(0.0f, -jumpDistance, jumpHeight), true, true, true);
+			CustomLaunchCharacter(FVector(0.0f, jumpDistance, jumpHeight), true, true, true);
 		}
 		else if (characterState == ECharacterState::VE_MovingRight)
 		{
-			CustomLaunchCharacter(FVector(0.0f, jumpDistance, jumpHeight), true, true, true);
+			CustomLaunchCharacter(FVector(0.0f, -jumpDistance, jumpHeight), true, true, true);
 		}
 		else
 		{
@@ -193,6 +199,10 @@ void AProjectAbyssV2Character::Jump()
 
 		++jumpCount;
 		characterState = ECharacterState::VE_Jumping;
+	}
+	else if (comboState == EComboState::E_Knockdown)
+	{
+		comboState = EComboState::E_Recovery;
 	}
 	
 }
@@ -204,20 +214,48 @@ void AProjectAbyssV2Character::StopJumping()
 
 void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 {
-	if (characterState == ECharacterState::VE_Launched || characterState == ECharacterState::VE_Jumping)
-	{
-		ACharacter::Landed(Hit);
 
-		//if (characterState == ECharacterState::E_Jumping)
-		//{
-		//	if(!Cast<AHitboxActor>(Hit.Actor.Get()))
-		//	{
-		//		GetCharacterMovement()->GravityScale = gravityScale;
-		//		characterState = ECharacterState::VE_Default;
-		//	}	
-		//}
+	GetMovementComponent()->StopMovementImmediately();
+	if (characterState == ECharacterState::VE_Jumping)
+	{
+
+			
+			
+				if (otherPlayer && Hit.GetActor() == otherPlayer)
+				{
+					if (otherPlayer->isFacingRight)
+					{
+						MoveCharacterSmoothly(GetActorLocation(), FVector(GetActorLocation().X, GetActorLocation().Y + (120 - fabs(GetActorLocation().Y - otherPlayer->GetActorLocation().Y)), GetActorLocation().Z - 80.0f));
+					}
+					else
+					{
+						MoveCharacterSmoothly(GetActorLocation(), FVector(GetActorLocation().X, GetActorLocation().Y + (120 - fabs(GetActorLocation().Y - otherPlayer->GetActorLocation().Y)) * -1.0f, GetActorLocation().Z - 80.0f));
+					}
+
+					GetCharacterMovement()->GravityScale = gravityScale;
+				}
+				
+				
+			
+				else if (!Cast<AHitboxActor>(Hit.GetActor()))
+				{
+				GetCharacterMovement()->GravityScale = gravityScale;
+				characterState = ECharacterState::VE_Default;
+				}
 	
 	}
+	else if ((comboState == EComboState::E_Launched) || comboState == EComboState::E_WallBounce || comboState == EComboState::E_FloorBounce)
+	{
+		if (!Cast<AHitboxActor>(Hit.GetActor()))
+		{
+			GetCharacterMovement()->GravityScale = gravityScale;
+			characterState = ECharacterState::VE_Default;
+		}
+	}
+	/*else if (shouldFloorBounce)
+	{
+		comboState = EComboState::E_FloorBounce;
+	}*/
 	jumpCount = 0;
 
 	IgnorePlayerToPlayerCollision(false);
@@ -236,7 +274,9 @@ void AProjectAbyssV2Character::CustomLaunchCharacter(FVector _launchVelocity, bo
 
 void AProjectAbyssV2Character::StartCrouching()
 {
-	if (canMove && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned && characterState != ECharacterState::VE_Jumping) {
+	//if (canMove && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned && characterState != ECharacterState::VE_Jumping) {
+	 if (canMove && comboState == EComboState::E_None)
+	 {
 		Crouch();
 		characterState = ECharacterState::VE_Crouching;
 		isCrouching = true;
@@ -247,17 +287,20 @@ void AProjectAbyssV2Character::StartCrouching()
 
 void AProjectAbyssV2Character::BeginHitstop(float _damageAmount)
 {
-	CustomTimeDilation = 0.0f;
-	otherPlayer->CustomTimeDilation = 0.0f;
 	float hitstopTime = _damageAmount * hitstopModifier;
-
-	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+	if (hitstopTime > 0)
 	{
-		gameMode->isTimerActive = true;
-	}
+		if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			CustomTimeDilation = 0.0f;
+			otherPlayer->CustomTimeDilation = 0.0f;
+			gameMode->hitstopFrames = hitstopTime;
 
-	GetWorld()->GetTimerManager().SetTimer(hitstopTimerHandle, this, &AProjectAbyssV2Character::EndHitstop, hitstopTime, false);
+			gameMode->isTimerActive = true;
+		}
+	}
 }
+
 
 void AProjectAbyssV2Character::EndHitstop()
 {
@@ -273,7 +316,7 @@ void AProjectAbyssV2Character::EndHitstop()
 
 void AProjectAbyssV2Character::StopCrouching()
 {
-	if (characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (comboState == EComboState::E_None)
 	{
 		UnCrouch();
 		characterState = ECharacterState::VE_Default;
@@ -288,25 +331,60 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 	{
 		if (MainMenu->isDeviceForMultiplePlayers)
 		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 			{
-				if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
+				if (characterState != ECharacterState::VE_Jumping && comboState != EComboState::E_Launched)
 				{
-					if (Value > 0.20f)
+					if (Value > 0.01f)
 					{
 						characterState = ECharacterState::VE_MovingRight;
 						hasReleasedAxisInput = false;
+
+						if (!isFacingRight)
+						{
+							isPressingBackward = true;
+						}
 					}
-					else if (Value < -0.20f)
+					else if (Value < -0.01f)
 					{
 						characterState = ECharacterState::VE_MovingLeft;
 						hasReleasedAxisInput = false;
+						if (isFacingRight)
+						{
+							isPressingBackward = true;
+						}
 					}
 					else
 					{
 						characterState = ECharacterState::VE_Default;
 						hasReleasedAxisInput = true;
+						isPressingBackward = false;
 					}
+				}
+			}
+			else if (canMove && isCrouching)
+			{
+				if (Value > 0.01f)
+				{
+					hasReleasedAxisInput = false;
+					if (!isFacingRight)
+					{
+						isPressingBackward = true;
+					}
+				}
+				else if (Value < -0.01f)
+				{
+					hasReleasedAxisInput = false;
+
+					if (isFacingRight)
+					{
+						isPressingBackward = true;
+					}
+				}
+				else
+				{
+					hasReleasedAxisInput = true;
+					isPressingBackward = false;
 				}
 			}
 			if (otherPlayer) 
@@ -315,7 +393,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (currentDistanceApart >= maxDistanceApart)
 				{
-					if ((currentDistanceApart + Value < currentDistanceApart && !isFlipped) || (currentDistanceApart - Value < currentDistanceApart && isFlipped))
+					if ((currentDistanceApart + Value < currentDistanceApart && !isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && isFacingRight))
 					{
 						// add movement in that direction
 						if (canMove) 
@@ -345,56 +423,92 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 	{
 		if (!MainMenu->isDeviceForMultiplePlayers)
 		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 			{
-				if (characterState != ECharacterState::VE_Jumping && characterState != ECharacterState::VE_Launched)
+				if (characterState != ECharacterState::VE_Jumping && comboState != EComboState::E_Launched)
 				{
 					if (Value > 0.20f)
 					{
 						characterState = ECharacterState::VE_MovingRight;
 						hasReleasedAxisInput = false;
+
+						if (!isFacingRight)
+						{
+							isPressingBackward = true;
+						}
 					}
 					else if (Value < -0.20f)
 					{
 						characterState = ECharacterState::VE_MovingLeft;
 						hasReleasedAxisInput = false;
+						if (isFacingRight)
+						{
+							isPressingBackward = true;
+						}
 					}
 					else
 					{
 						characterState = ECharacterState::VE_Default;
 						hasReleasedAxisInput = true;
+						isPressingBackward = false;
 					}
 				}
 			}
-			if (otherPlayer)
+			else if (canMove && isCrouching)
 			{
-				float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
-
-				if (currentDistanceApart >= maxDistanceApart)
+				if (Value > 0.20f)
 				{
-					if ((currentDistanceApart + Value < currentDistanceApart && !isFlipped) || (currentDistanceApart - Value < currentDistanceApart && isFlipped))
+					hasReleasedAxisInput = false;
+					if (!isFacingRight)
 					{
-						// add movement in that direction
+						isPressingBackward = true;
+					}
+				}
+				else if (Value < -0.20f)
+				{
+					hasReleasedAxisInput = false;
+
+					if (isFacingRight)
+					{
+						isPressingBackward = true;
+					}
+				}
+				else
+				{
+					hasReleasedAxisInput = true;
+					isPressingBackward = false;
+				}
+				if (otherPlayer)
+				{
+					float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
+
+					if (currentDistanceApart >= maxDistanceApart)
+					{
+						if ((currentDistanceApart + Value < currentDistanceApart && !isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && isFacingRight))
+						{
+							// add movement in that direction
+							if (canMove)
+							{
+								AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+							}
+
+						}
+					}
+					else
+					{
 						if (canMove)
 						{
+							// add movement in that direction
 							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
 						}
 
 					}
 				}
-				else
-				{
-					if (canMove)
-					{
-						// add movement in that direction
-						AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-					}
-
-				}
 			}
 		}
 	}
 }
+
 
 void AProjectAbyssV2Character::TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location)
 {
@@ -409,7 +523,7 @@ void AProjectAbyssV2Character::TouchStopped(const ETouchIndex::Type FingerIndex,
 
 void AProjectAbyssV2Character::StartJab()
 {
-	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (canAttack && comboState == EComboState::E_None)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using JAB"))
 		wasJabUsed = true;
@@ -420,7 +534,7 @@ void AProjectAbyssV2Character::StartJab()
 
 void AProjectAbyssV2Character::StartStrong()
 {
-	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (canAttack && comboState == EComboState::E_None)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using STRONG"))
 		wasStrongUsed = true;
@@ -431,7 +545,7 @@ void AProjectAbyssV2Character::StartStrong()
 
 void AProjectAbyssV2Character::StartFierce()
 {
-	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (canAttack && comboState == EComboState::E_None)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using FIERCE"))
 		wasFierceUsed = true;
@@ -442,7 +556,7 @@ void AProjectAbyssV2Character::StartFierce()
 
 void AProjectAbyssV2Character::StartShort()
 {
-	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (canAttack && comboState == EComboState::E_None)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using SHORT"))
 		wasShortUsed = true;
@@ -453,7 +567,7 @@ void AProjectAbyssV2Character::StartShort()
 
 void AProjectAbyssV2Character::StartLong()
 {
-	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (canAttack && comboState == EComboState::E_None)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using LONG"))
 		wasLongUsed = true;
@@ -464,7 +578,7 @@ void AProjectAbyssV2Character::StartLong()
 
 void AProjectAbyssV2Character::StartRoundhouse()
 {
-	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (canAttack && comboState == EComboState::E_None)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("We are using ROUNDHOUSE"))
 		wasRoundhouseUsed = true;
@@ -475,7 +589,7 @@ void AProjectAbyssV2Character::StartRoundhouse()
 
 void AProjectAbyssV2Character::StartTerrorAttack()
 {
-	if (canAttack && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned)
+	if (canAttack && comboState == EComboState::E_None)
 	{
 		if (terrorGauge >= 1.0f)
 		{
@@ -493,15 +607,15 @@ void AProjectAbyssV2Character::StartTerrorAttack()
 
 void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 {
-	if ((characterState == ECharacterState::VE_MovingLeft && isFlipped) || (characterState == ECharacterState::VE_MovingRight && !isFlipped))
+	//f ((characterState == ECharacterState::VE_MovingLeft && isFacingRight) || (characterState == ECharacterState::VE_MovingRight && !isFacingRight))
+	if (isPressingBackward)
 	{
 		canMove = false;
-		UE_LOG(LogTemp, Warning, TEXT("The Character is autoblocking."));
-		characterState = ECharacterState::VE_Blocking;
+		StartProxBlock();
 	}
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, float _blockstunTime, float _launchAmount, float _knockbackAmount, EHitType _hitType)
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType)
 {
 	if (!((characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_HIGH || _hitType == EHitType::E_OVERHEAD) ||
 		(characterState == ECharacterState::VE_Blocking && !isCrouching && _hitType == EHitType::E_MID) ||
@@ -512,23 +626,23 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 		
 
 		
-		stunTime = _stunTime;
+		stunFrames = _hitstunFrames;
 		
-		if (characterState != ECharacterState::VE_Launched && stunTime > 0.0f)
+		if (comboState != EComboState::E_Launched && stunFrames > 0)
 		{
 			switch (_hitType)
 			{
 			case EHitType::E_OVERHEAD:
-				characterState = ECharacterState::VE_HighStunned;
+				comboState = EComboState::E_HighStunned;
 				break;
 			case EHitType::E_HIGH:
-				characterState = ECharacterState::VE_HighStunned;
+				comboState = EComboState::E_HighStunned;
 				break;
 			case EHitType::E_MID:
-				characterState = ECharacterState::VE_MidStunned;
+				comboState = EComboState::E_MidStunned;
 				break;
 			case EHitType::E_LOW:
-				characterState = ECharacterState::VE_LowStunned;
+				comboState = EComboState::E_LowStunned;
 				break;
 			case EHitType::E_NONE:
 				break;
@@ -553,20 +667,44 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, float _stunTime, 
 		float reducedDamage = _damageAmount * 0.5f;
 		playerHealth -= reducedDamage;
 
-		//BeginHitstop(reducedDamage);
+	
 
-		stunTime = _blockstunTime;
-	}
+		stunFrames = _blockstunFrames;
 
-	if (characterState != ECharacterState::VE_Launched && stunTime > 0.0f)
-	{
-		characterState = ECharacterState::VE_LowStunned;
-		BeginStun();
+		if (stunFrames > 0)
+		{
+			switch (_hitType)
+			{
+			case EHitType::E_OVERHEAD:
+				comboState = EComboState::E_HighStunned;
+				break;
+			case EHitType::E_HIGH:
+				comboState = EComboState::E_HighStunned;
+				break;
+			case EHitType::E_MID:
+				comboState = EComboState::E_MidStunned;
+				break;
+			case EHitType::E_LOW:
+				comboState = EComboState::E_LowStunned;
+				break;
+			case EHitType::E_NONE:
+				break;
+			}
+
+			BeginStun();
+		 }
 	}
-	else
-	{
-		characterState = ECharacterState::VE_Launched;
-	}
+	//BeginHitstop(reducedDamage);
+
+	//if (comboState != EComboState::E_Launched && stunFrames > 0)
+	//{
+	//	comboState = EComboState::E_LowStunned;
+	//	BeginStun();
+	//}
+	//else
+	//{
+	//	comboState = EComboState::E_Launched;
+	//}
 	PerformKnockback(_knockbackAmount,  0.0f, false);
 	if (playerHealth < 0.00f)
 	{
@@ -578,7 +716,7 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 {
 	if (characterState ==  ECharacterState::VE_Blocking)
 	{
-		if (isFlipped)
+		if (isFacingRight)
 		{
 			CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
 		}
@@ -592,9 +730,9 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 		if (_launchAmount > 0.0f)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("We're being launched for %f."), _launchAmount);
-			characterState = ECharacterState::VE_Launched;
+			comboState = EComboState::E_Launched;
 			GetCharacterMovement()->GravityScale *= 0.7;
-			if (isFlipped)
+			if (isFacingRight)
 			{
 				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
 			}
@@ -611,16 +749,21 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 
 void AProjectAbyssV2Character::BeginStun()
 {
-	canMove = false;
-	GetWorld()->GetTimerManager().SetTimer(stunTimerHandle, this, &AProjectAbyssV2Character::EndStun, stunTime, false);
+	if (stunFrames > 0.0f)
+	{
+		canMove = false;
+	}
+	
+	//GetWorld()->GetTimerManager().SetTimer(stunTimerHandle, this, &AProjectAbyssV2Character::EndStun, stunTime, false);
 
 }
 
 void AProjectAbyssV2Character::EndStun()
 {
-	if (characterState != ECharacterState::VE_Launched)
+	if (comboState != EComboState::E_Launched && comboState != EComboState::E_Knockdown && comboState != EComboState::E_Recovery && comboState != EComboState::E_WallBounce && comboState != EComboState::E_FloorBounce)
 	{
 		characterState = ECharacterState::VE_Default;
+		comboState = EComboState::E_None;
 	}
 	
 	canMove = true;
@@ -633,7 +776,7 @@ void AProjectAbyssV2Character::AddToInputMap(FString _input, EInputType _type)
 
 void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 {
-	if (!isFlipped)
+	if (!isFacingRight)
 	{
 		if (_inputInfo.inputType == EInputType::E_Backward)
 			_inputInfo.inputType = EInputType::E_Forward;
@@ -671,21 +814,22 @@ void AProjectAbyssV2Character::CheckBufferForCommandType()
 	{
 		correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
 
-		for (unsigned int input = 0; input < inputBuffer.Capacity(); ++input)
-		{
-			inputBuffer[input].wasUsed = false;
-		}
+		//for (unsigned int input = 0; input < inputBuffer.Capacity(); ++input)
+		//{
+		//	inputBuffer[input].wasUsed = false;
+		//}
 
 
 		for (int frame = 0; frame < currentCommand.maxFramesBetweenInputs; ++frame)
 		{
 			int frameDataToCheck = (curTick - frame + inputBuffer.Capacity()) % inputBuffer.Capacity();
 			EInputType type = inputBuffer[frameDataToCheck].inputType;
+			EInputStatus status = inputBuffer[frameDataToCheck].inputStatus;
 
-			if (type == currentCommand.inputTypes[correctSequenceCounter])
+			if (type == currentCommand.inputTypes[correctSequenceCounter].inputType)
 			{
 				--correctSequenceCounter;
-				inputBuffer[frameDataToCheck].wasUsed = true;
+				//inputBuffer[frameDataToCheck].wasUsed = true;
 			}
 			else if (type != EInputType::E_None)
 			{
@@ -744,6 +888,22 @@ void AProjectAbyssV2Character::StartCommand(FString _commandName)
 			}
 		}
 
+	}
+}
+
+void AProjectAbyssV2Character::StartProxBlock()
+{
+	if (canMove && comboState == EComboState::E_None)
+	{
+		characterState = ECharacterState::VE_Blocking;
+	}
+}
+
+void AProjectAbyssV2Character::StopProxBlock()
+{
+	if (canMove && comboState == EComboState::E_None)
+	{
+		characterState = ECharacterState::VE_Default;
 	}
 }
 
@@ -822,7 +982,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 		FInputInfo noneInput;
 		noneInput.inputType = EInputType::E_None;
 		noneInput.frame = GFrameCounter;
-		noneInput.wasUsed = false;
+		//noneInput.wasUsed = false;
 
 		inputBuffer[curTick] = noneInput;
 	}
@@ -831,15 +991,25 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 		capturedInputThisFrame = false;
 	}
 
+	//HitStun is now done in frames, not seconds
+	if (stunFrames > 0)
+	{
+		--stunFrames;
+
+		if (stunFrames <= 0)
+		{
+			EndStun();
+		}
+	}
 	DetermineCommandToUse();
 	/*
-		if (characterState != ECharacterState::VE_Jumping && canFlip)
+		if (characterState != ECharacterState::VE_Jumping && comboState != EComboState::E_WallBounce && canFlip)
 		{
 			if (otherPlayer)
 			{
 				if (otherPlayer->GetActorLocation().Y <= GetActorLocation().Y)
 				{
-					if (isFlipped)
+					if (isFacingRight)
 					{
 						GetCapsuleComponent()->GetChildrenComponents(true, capsuleChildren);
 
@@ -856,16 +1026,17 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 							transform = characterMesh->GetRelativeTransform();
 							scale = transform.GetScale3D();
 							scale.Y = -1.0f;
+							//scale.X = -1.0f;
 							transform.SetScale3D(scale);
 
 							characterMesh->SetRelativeTransform(transform);
 						}
-						isFlipped = false;
+						isFacingRight = false;
 					}
 				}
 				else
 				{
-					if (!isFlipped)
+					if (!isFacingRight)
 					{
 						GetCapsuleComponent()->GetChildrenComponents(true, capsuleChildren);
 
@@ -880,12 +1051,13 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 
 						transform = characterMesh->GetRelativeTransform();
 						scale = transform.GetScale3D();
-						scale.Y = -1.0f;
+						scale.Y = 1.0f;
+						//scale.X = -1.0f;
 						transform.SetScale3D(scale);
 
 						characterMesh->SetRelativeTransform(transform);
 					}
-					isFlipped = true;
+					isFacingRight = true;
 				}
 			}
 		}*/
@@ -952,7 +1124,7 @@ void AProjectAbyssV2Character::DoubleKO()
 					//{
 						//// the following code should 110% be using scale.Y, but for some reason with Mask, it has to be scale.Z I'll note this down and look into a fix -FIXED
 						//Now when Mask is flipped she is disjointed from hurtbox, I think the best solution is going to be to make our own idle anim using cascadeur
-						//if (isFlipped)
+						//if (isFacingRight)
 					//	{
 						//	if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
 						//	{
@@ -964,12 +1136,12 @@ void AProjectAbyssV2Character::DoubleKO()
 //								mesh->SetRelativeTransform(transform);
 	//
 		//					}
-			//				isFlipped = false;
+			//				isFacingRight = false;
 		//				}
 				//	}
 			//		else
 	//				{
-					//	if (isFlipped)
+					//	if (isFacingRight)
 		//					if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
 						//	{
 				//			//
@@ -980,7 +1152,7 @@ void AProjectAbyssV2Character::DoubleKO()
 				//				mesh->SetRelativeTransform(transform);
 
 //							}
-	//					isFlipped = true;
+	//					isFacingRight = true;
 			//		}
 				//}
 			//}

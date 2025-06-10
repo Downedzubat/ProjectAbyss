@@ -17,4 +17,24 @@ AProjectAbyssV2GameMode::AProjectAbyssV2GameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+
 }
+
+void AProjectAbyssV2GameMode::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	//call BP tick function
+	BPTick(DeltaTime);
+
+	if (hitstopFrames > 0)
+	{
+		--hitstopFrames;
+		if (hitstopFrames <= 0) 
+		{
+			if (player1) { player1->EndHitstop(); }
+			if (player2) { player2->EndHitstop(); }
+		}
+			
+	}
+}
+

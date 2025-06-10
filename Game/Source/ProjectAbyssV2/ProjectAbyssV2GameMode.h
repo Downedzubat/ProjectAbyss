@@ -17,6 +17,11 @@ class AProjectAbyssV2GameMode : public AGameModeBase
 public:
 	AProjectAbyssV2GameMode();
 
+	virtual void Tick(float DeltaTime) override;
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void BPTick(float DeltaTime);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 	AProjectAbyssV2Character* player1;
 
@@ -31,6 +36,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gamemode Settings")
 	bool isTimerActive;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	int hitstopFrames;
 
 };
 

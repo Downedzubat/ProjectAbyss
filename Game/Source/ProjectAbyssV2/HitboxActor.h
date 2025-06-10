@@ -55,7 +55,7 @@ public:
 
 	//Damage the hitbox will do
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		float hitstunTime;
+		int hitstunFrames;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 		float knockbackAmount;
@@ -65,7 +65,7 @@ public:
 
 	//Damage the hitbox will do
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		float blockStunTime;
+		int blockStunFrames;
 
 	//Hitbox Enum instance
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
