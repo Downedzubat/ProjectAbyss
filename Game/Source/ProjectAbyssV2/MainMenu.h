@@ -31,6 +31,11 @@ class PROJECTABYSSV2_API UMainMenu : public UGameInstance
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller")
 	bool isDeviceForMultiplePlayers;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Streaming")
+	FName levelToLoad;
+
+	
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameInstance Settings")
 	int numRounds;
 

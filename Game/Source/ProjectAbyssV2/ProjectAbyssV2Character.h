@@ -428,7 +428,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void UpdateHUDRoundIcons();
 
-	UFUNCTION(BlueprintImplementableEvent)
+	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void NotifyPlayerLockedIn();
 
 	//Timer for handling stuns
