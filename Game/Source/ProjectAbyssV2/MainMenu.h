@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Engine/GameInstance.h"
+#include "Components/AudioComponent.h"
 #include "MainMenu.generated.h"
 
 
@@ -11,8 +12,19 @@ UENUM(BlueprintType)
 enum class ECharacterClass : uint8
 {
 	VE_Default		  UMETA(DisplayName = "Mannequin"),
-	VE_MASK		  UMETA(DisplayName = "Mask"),
-	VE_FIGHTMAN UMETA(DisplayName = "FightMan")
+	VE_MASK			  UMETA(DisplayName = "Mask"),
+	VE_FIGHTMAN		  UMETA(DisplayName = "FightMan")
+};
+
+
+UENUM(BlueprintType)
+enum class EMusicType : uint8
+{
+	E_Default			UMETA(DisplayName = "DEFAULT"),
+	E_Menu				UMETA(DisplayName = "MAIN_MENU"),
+	E_CharacterSelect	UMETA(DisplayName = "CHARACTER_SELECT"),
+	E_LevelTheme		UMETA(DisplayName = "STAGE_THEME"),
+	E_CharacterTheme	UMETA(DisplayName = "CHARA_THEME")
 };
 /**
  * 
@@ -34,7 +46,11 @@ class PROJECTABYSSV2_API UMainMenu : public UGameInstance
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Level Streaming")
 	FName levelToLoad;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Music")
+	EMusicType musicType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Music References")
+	UAudioComponent* musicRef;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameInstance Settings")
 	int numRounds;
