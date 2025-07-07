@@ -181,19 +181,19 @@ void AProjectAbyssV2Character::Jump()
 	//ACharacter::Jump();
 	if (canMove && !isCrouching && comboState == EComboState::E_None)
 	{
-		IgnorePlayerToPlayerCollision(true);
+		//IgnorePlayerToPlayerCollision(true);
 
 		if (characterState == ECharacterState::VE_MovingLeft)
 		{
-			CustomLaunchCharacter(FVector(0.0f, jumpDistance, jumpHeight), true, true, true);
+			CustomLaunchCharacter(FVector(0.0f, jumpDistance, jumpHeight), true, true);
 		}
 		else if (characterState == ECharacterState::VE_MovingRight)
 		{
-			CustomLaunchCharacter(FVector(0.0f, -jumpDistance, jumpHeight), true, true, true);
+			CustomLaunchCharacter(FVector(0.0f, -jumpDistance, jumpHeight), true, true);
 		}
 		else
 		{
-			CustomLaunchCharacter(FVector(0.0f, 0.0f, jumpHeight), false, true, true);
+			CustomLaunchCharacter(FVector(0.0f, 0.0f, jumpHeight), false, true);
 		}
 
 

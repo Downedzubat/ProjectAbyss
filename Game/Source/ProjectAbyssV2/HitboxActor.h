@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Engine/DataTable.h"
 #include "HitboxActor.generated.h"
 
 UENUM(BlueprintType)
@@ -27,6 +28,45 @@ enum class EHitType : uint8
 	E_NONE		UMETA(DisplayName = "None")
 };
 
+USTRUCT(BlueprintType)
+struct FHitboxData : public FTableRowBase
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	float hitboxDamage;
+
+	//Damage the hitbox will do
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	int hitstunFrames;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	float knockbackAmount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	float launchDistance;
+
+	//Damage the hitbox will do
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	int blockStunFrames;
+
+	//Hitbox Enum instance
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	EHitboxEnum hitboxType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	EHitType hitType;
+
+	//Hitbox location
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	FTransform hitboxTransform;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	bool shouldAttach;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	bool shouldCauseGroundBounce;
+
+};
 
 UCLASS()
 class PROJECTABYSSV2_API AHitboxActor : public AActor
@@ -48,6 +88,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 		void VisualizeHitbox();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Hitbox")
+	FHitboxData hitboxData;
 
 	//Damage the hitbox will do
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
@@ -77,6 +119,11 @@ public:
 	//Hitbox location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 		FVector hitboxLocation;
+
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+		bool shouldAttach;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+		bool shouldCauseGroundBounce;
 
 protected:
 	// Called when the game starts or when spawned
