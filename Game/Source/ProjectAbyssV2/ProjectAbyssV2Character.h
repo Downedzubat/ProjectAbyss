@@ -61,6 +61,7 @@ enum class EInputStatus : uint8
 	E_Hold		UMETA(DisplayName = "HOLD")
 };
 
+//This struct is used to form commands - chaining them together gives us special moves
 USTRUCT(BlueprintType)
 struct FCommandInput
 {
@@ -71,8 +72,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	EInputStatus inputStatus;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	int64 requiredChargeFrames;
 };
 
+
+//The following parameters are what info can be edited about a specific command
 USTRUCT(BlueprintType)
 struct FCommand
 {
@@ -85,18 +91,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		TArray<FCommandInput> inputTypes;
 
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		TArray<FString> inputs;*/
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	int64 maxFramesBetweenInputs = 12;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		bool hasUsedCommand;
-
+	
+		//this is not in use, but removing it might cause issues currently
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 		bool hasUsedSuper;
 };
+
+//Raw input information
 USTRUCT(BlueprintType)
 struct FInputInfo
 {
@@ -112,6 +118,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	int64 frame;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	int64 chargedFrames;
+
+};
+
+USTRUCT(BlueprintType)
+struct FChargeInputs
+{
+	GENERATED_BODY()
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	EInputType inputType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	int64 chargeFrames;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	bool isHoldingInput = false;
 };
 
 USTRUCT(BlueprintType)
@@ -370,9 +395,11 @@ protected:
 	bool hasWonMatch;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameLogic")
 	int roundsWon;
-
 	int curTick;
 	bool capturedInputThisFrame;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	TArray<FChargeInputs> chargeTimes;
 
 	// FUNCTIONS
 	
@@ -459,7 +486,14 @@ protected:
 
 	//Checks buffer for sequence
 	UFUNCTION(BlueprintCallable)
-	void CheckBufferForCommandType();
+	void CheckBufferForCommandType(EInputStatus _inputStatus);
+
+	bool MultiInputCommand(FCommand _command, EInputType _pressedInput);
+	UFUNCTION(BlueprintCallable)
+	void ChargeTimeTrackStart(FChargeInputs _inputToTrack);
+
+	UFUNCTION(BlueprintCallable)
+	void ChargeTimeTrackReset(FChargeInputs _inputToReset);
 
 	//Determine which command should be executed based on specific criteria
 	UFUNCTION(BlueprintCallable)

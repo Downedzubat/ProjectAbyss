@@ -521,6 +521,7 @@ void AProjectAbyssV2Character::TouchStopped(const ETouchIndex::Type FingerIndex,
 	StopJumping();
 }
 
+
 void AProjectAbyssV2Character::StartJab()
 {
 	if (canAttack && comboState == EComboState::E_None)
@@ -529,6 +530,11 @@ void AProjectAbyssV2Character::StartJab()
 		wasJabUsed = true;
 		canMove = false;
 	}
+	// I'm not doing this for all 6 attacks, I'm going to streamline it later
+	FInputInfo inputInfo;
+	inputInfo.inputType = EInputType::E_Jab;
+	inputInfo.frame = curTick;
+	AddtoBuffer(inputInfo);
 	
 }
 
@@ -796,7 +802,7 @@ void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 		//multiple inputs performed on same frame
 	}
 	
-	CheckBufferForCommandType();
+	CheckBufferForCommandType(inputBuffer[curTick].inputStatus);
 }
 
 
@@ -805,42 +811,87 @@ void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 //Deprecated as a more efficient method is now used
 
 
-void AProjectAbyssV2Character::CheckBufferForCommandType()
+void AProjectAbyssV2Character::CheckBufferForCommandType(EInputStatus _inputStatus)
 {
 	int correctSequenceCounter = 0;
-	int64 lastSuccessfulInputFrame = -1;
-
-	for (auto currentCommand : characterCommands)
-	{
-		correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+	//int64 lastSuccessfulInputFrame = -1;
 
 		//for (unsigned int input = 0; input < inputBuffer.Capacity(); ++input)
 		//{
 		//	inputBuffer[input].wasUsed = false;
 		//}
 
+	for (auto currentCommand : characterCommands)
+	{
+		correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
 
 		for (int frame = 0; frame < currentCommand.maxFramesBetweenInputs; ++frame)
 		{
 			int frameDataToCheck = (curTick - frame + inputBuffer.Capacity()) % inputBuffer.Capacity();
 			EInputType type = inputBuffer[frameDataToCheck].inputType;
 			EInputStatus status = inputBuffer[frameDataToCheck].inputStatus;
-
-			if (type == currentCommand.inputTypes[correctSequenceCounter].inputType)
+			int64 chargedFrames = inputBuffer[frameDataToCheck].chargedFrames;
+			if (correctSequenceCounter > -1)
 			{
-				--correctSequenceCounter;
-				//inputBuffer[frameDataToCheck].wasUsed = true;
+				// Making this as robust as it now is was painful
+				if ((type == currentCommand.inputTypes[correctSequenceCounter].inputType || (MultiInputCommand(currentCommand, type) && status != EInputStatus::E_Release))
+					&& (status == currentCommand.inputTypes[correctSequenceCounter].inputStatus || (status == EInputStatus::E_Press && currentCommand.inputTypes[correctSequenceCounter].inputStatus == EInputStatus::E_Hold))
+					&& chargedFrames >= currentCommand.inputTypes[correctSequenceCounter].requiredChargeFrames)
+				{
+					--correctSequenceCounter;
+					//inputBuffer[frameDataToCheck].wasUsed = true;
+				}
+				else if (type != EInputType::E_None && status != EInputStatus::E_Release)
+				{
+					correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+				}
+				else if (MultiInputCommand(currentCommand, type) && status == EInputStatus::E_Release)
+				{
+					correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+				}
 			}
-			else if (type != EInputType::E_None)
-			{
-				correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
-			}
-
-			if (correctSequenceCounter == -1)
+			
+			//prevents commands repeating on release will change if we decide to use negative edge or have a character with a gimmick where a release input is required
+			if (correctSequenceCounter == -1 && _inputStatus != EInputStatus::E_Release)
 			{
 				moveBuffer.Add(currentCommand);
 				break;
 			}
+		}
+	}
+}
+
+bool AProjectAbyssV2Character::MultiInputCommand(FCommand _command, EInputType _pressedInput)
+{
+	for (auto input : _command.inputTypes)
+	{
+		if (input.inputType == _pressedInput && input.inputStatus == EInputStatus::E_Hold)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+void AProjectAbyssV2Character::ChargeTimeTrackStart(FChargeInputs _inputToTrack)
+{
+	for (int i = 0; i < chargeTimes.Num(); ++i)
+	{
+		if (chargeTimes[i].inputType == _inputToTrack.inputType)
+		{
+			chargeTimes[i].isHoldingInput = true;
+		}
+	}
+}
+
+void AProjectAbyssV2Character::ChargeTimeTrackReset(FChargeInputs _inputToReset)
+{
+	for (int i = 0; i < chargeTimes.Num(); ++i)
+	{
+		if (chargeTimes[i].inputType == _inputToReset.inputType)
+		{
+			chargeTimes[i].isHoldingInput = false;
+			chargeTimes[i].chargeFrames = 0;
 		}
 	}
 }
@@ -968,6 +1019,29 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
+	if (!capturedInputThisFrame)
+	{
+		FInputInfo noneInput;
+		noneInput.inputType = EInputType::E_None;
+		noneInput.frame = GFrameCounter;
+		noneInput.chargedFrames = 0;
+
+		inputBuffer[curTick] = noneInput;
+	}
+	else
+	{
+		capturedInputThisFrame = false;
+	}
+
+
+	//update all charge values
+	for (int i = 0; i < chargeTimes.Num(); ++i)
+	{
+		if (chargeTimes[i].isHoldingInput)
+		{
+			++chargeTimes[i].chargeFrames;
+		}
+	}
 	if (curTick < 59)
 	{
 		++curTick;
@@ -977,19 +1051,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 		curTick = 0;
 	}
 
-	if (!capturedInputThisFrame)
-	{
-		FInputInfo noneInput;
-		noneInput.inputType = EInputType::E_None;
-		noneInput.frame = GFrameCounter;
-		//noneInput.wasUsed = false;
-
-		inputBuffer[curTick] = noneInput;
-	}
-	else
-	{
-		capturedInputThisFrame = false;
-	}
+	
 
 	//HitStun is now done in frames, not seconds
 	if (stunFrames > 0)
