@@ -166,11 +166,17 @@ class AProjectAbyssV2Character : public ACharacter
 	//class USpringArmComponent* CameraBoom;
 
 	void StartJab();
+	void ReleaseJab();
 	void StartStrong();
+	void ReleaseStrong();
 	void StartFierce();
+	void ReleaseFierce();
 	void StartShort();
+	void ReleaseShort();
 	void StartLong();
+	void ReleaseLong();
 	void StartRoundhouse();
+	void ReleaseRoundhouse();
 	void StartTerrorAttack();
 
 	//When in keyboard only mode use following functions to allow P2 to perform actions
@@ -324,6 +330,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TMap<FString, EInputType> inputToInputTypeMap;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void PerformInputLogic(EInputType _type, EInputStatus _status);
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TCircularBuffer<FInputInfo> inputBuffer = TCircularBuffer<FInputInfo>(60);
@@ -380,7 +388,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combos")
 		bool atkHit;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
-		bool hasReleasedAxisInput;
+		bool hasReleasedRightAxisInput;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
+		bool hasReleasedLeftAxisInput;
 	// SuperMeter (called terror for upcoming game)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Meter")
 		float terrorGauge;

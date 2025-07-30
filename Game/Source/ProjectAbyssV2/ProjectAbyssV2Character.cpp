@@ -86,7 +86,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	isReadyForEntrance = false;
 	hasWonMatch = false;
 
-	hasReleasedAxisInput = true;
+	//hasReleasedAxisInput = true;
 	playerHealth = 1.00f;
 	maxDistanceApart = 475.0f;
 	stunFrames = 0;
@@ -179,6 +179,7 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 void AProjectAbyssV2Character::Jump()
 {
 	//ACharacter::Jump();
+	PerformInputLogic(EInputType::E_Jump, EInputStatus::E_Press);
 	if (canMove && !isCrouching && comboState == EComboState::E_None)
 	{
 		//IgnorePlayerToPlayerCollision(true);
@@ -274,6 +275,7 @@ void AProjectAbyssV2Character::CustomLaunchCharacter(FVector _launchVelocity, bo
 
 void AProjectAbyssV2Character::StartCrouching()
 {
+	PerformInputLogic(EInputType::E_Crouch, EInputStatus::E_Press);
 	//if (canMove && characterState != ECharacterState::VE_LowStunned && characterState != ECharacterState::VE_MidStunned && characterState != ECharacterState::VE_HighStunned && characterState != ECharacterState::VE_Jumping) {
 	 if (canMove && comboState == EComboState::E_None)
 	 {
@@ -316,6 +318,7 @@ void AProjectAbyssV2Character::EndHitstop()
 
 void AProjectAbyssV2Character::StopCrouching()
 {
+	PerformInputLogic(EInputType::E_Crouch, EInputStatus::E_Release);
 	if (comboState == EComboState::E_None)
 	{
 		UnCrouch();
@@ -327,6 +330,108 @@ void AProjectAbyssV2Character::StopCrouching()
 
 void AProjectAbyssV2Character::MoveRight(float Value)
 {
+	//OH GOD
+	//Best hope you have an evening free enjoying how I came to this solution
+	if (!isCrouching)
+	{
+		if (Value > 0.01f)
+		{
+			if (!hasReleasedLeftAxisInput)
+			{
+				hasReleasedLeftAxisInput = true;
+
+				if (isFacingRight)
+				{
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+				}
+				else
+				{
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+				}
+			}
+
+			if (hasReleasedRightAxisInput)
+			{
+				hasReleasedRightAxisInput = false;
+
+				if (isFacingRight)
+				{
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+				}
+				else
+				{
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+				}
+			}
+
+		}
+		else if (Value < -0.01f)
+		{
+			if (!hasReleasedRightAxisInput)
+			{
+				hasReleasedRightAxisInput = true;
+
+				if (isFacingRight)
+				{
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+				}
+				else
+				{
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+				}
+			}
+
+			if (hasReleasedLeftAxisInput)
+			{
+				hasReleasedLeftAxisInput = false;
+
+				if (isFacingRight)
+				{
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+				}
+				else
+				{
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+				}
+			}
+		}
+	}
+	else
+	{
+		if (Value > 0.01f)
+		{
+			if (hasReleasedRightAxisInput)
+			{
+				hasReleasedRightAxisInput = false;
+
+				if (isFacingRight)
+				{
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+				}
+				else
+				{
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+				}
+			}
+		}
+		else if (Value < -0.01f)
+		{
+			if (hasReleasedLeftAxisInput)
+			{
+				hasReleasedLeftAxisInput = false;
+
+				if (isFacingRight)
+				{
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+
+				}
+				else
+				{
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+				}
+			}
+		}
+	}
 	if (auto MainMenu = Cast<UMainMenu>(GetGameInstance())) 
 	{
 		if (MainMenu->isDeviceForMultiplePlayers)
@@ -338,7 +443,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 					if (Value > 0.01f)
 					{
 						characterState = ECharacterState::VE_MovingRight;
-						hasReleasedAxisInput = false;
+						hasReleasedRightAxisInput = false;
 
 						if (!isFacingRight)
 						{
@@ -348,7 +453,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 					else if (Value < -0.01f)
 					{
 						characterState = ECharacterState::VE_MovingLeft;
-						hasReleasedAxisInput = false;
+						hasReleasedLeftAxisInput = false;
 						if (isFacingRight)
 						{
 							isPressingBackward = true;
@@ -357,7 +462,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 					else
 					{
 						characterState = ECharacterState::VE_Default;
-						hasReleasedAxisInput = true;
+						//hasReleasedRightAxisInput = true;
 						isPressingBackward = false;
 					}
 				}
@@ -366,7 +471,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 			{
 				if (Value > 0.01f)
 				{
-					hasReleasedAxisInput = false;
+					hasReleasedRightAxisInput = false;
 					if (!isFacingRight)
 					{
 						isPressingBackward = true;
@@ -374,7 +479,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 				}
 				else if (Value < -0.01f)
 				{
-					hasReleasedAxisInput = false;
+					hasReleasedLeftAxisInput = false;
 
 					if (isFacingRight)
 					{
@@ -383,7 +488,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 				}
 				else
 				{
-					hasReleasedAxisInput = true;
+					//hasReleasedAxisInput = true;
 					isPressingBackward = false;
 				}
 			}
@@ -430,7 +535,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 					if (Value > 0.20f)
 					{
 						characterState = ECharacterState::VE_MovingRight;
-						hasReleasedAxisInput = false;
+						hasReleasedRightAxisInput = false;
 
 						if (!isFacingRight)
 						{
@@ -440,7 +545,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 					else if (Value < -0.20f)
 					{
 						characterState = ECharacterState::VE_MovingLeft;
-						hasReleasedAxisInput = false;
+						hasReleasedLeftAxisInput = false;
 						if (isFacingRight)
 						{
 							isPressingBackward = true;
@@ -449,7 +554,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 					else
 					{
 						characterState = ECharacterState::VE_Default;
-						hasReleasedAxisInput = true;
+						//hasReleasedAxisInput = true;
 						isPressingBackward = false;
 					}
 				}
@@ -458,7 +563,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 			{
 				if (Value > 0.20f)
 				{
-					hasReleasedAxisInput = false;
+					hasReleasedRightAxisInput = false;
 					if (!isFacingRight)
 					{
 						isPressingBackward = true;
@@ -466,7 +571,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 				}
 				else if (Value < -0.20f)
 				{
-					hasReleasedAxisInput = false;
+					hasReleasedLeftAxisInput = false;
 
 					if (isFacingRight)
 					{
@@ -475,7 +580,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 				}
 				else
 				{
-					hasReleasedAxisInput = true;
+					//hasReleasedAxisInput = true;
 					isPressingBackward = false;
 				}
 				if (otherPlayer)
@@ -524,73 +629,99 @@ void AProjectAbyssV2Character::TouchStopped(const ETouchIndex::Type FingerIndex,
 
 void AProjectAbyssV2Character::StartJab()
 {
-	if (canAttack && comboState == EComboState::E_None)
+	PerformInputLogic(EInputType::E_Jab, EInputStatus::E_Press);
+
+	if (canAttack && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("We are using JAB"))
 		wasJabUsed = true;
-		canMove = false;
 	}
-	// I'm not doing this for all 6 attacks, I'm going to streamline it later
-	FInputInfo inputInfo;
-	inputInfo.inputType = EInputType::E_Jab;
-	inputInfo.frame = curTick;
-	AddtoBuffer(inputInfo);
 	
+}
+
+void AProjectAbyssV2Character::ReleaseJab()
+{
+	PerformInputLogic(EInputType::E_Jab, EInputStatus::E_Release);
 }
 
 void AProjectAbyssV2Character::StartStrong()
 {
-	if (canAttack && comboState == EComboState::E_None)
+	
+	PerformInputLogic(EInputType::E_Strong, EInputStatus::E_Press);
+
+	if (canAttack && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("We are using STRONG"))
 		wasStrongUsed = true;
-		canMove = false;
 	}
 	
 }
 
+void AProjectAbyssV2Character::ReleaseStrong()
+{
+	PerformInputLogic(EInputType::E_Strong, EInputStatus::E_Release);
+}
+
 void AProjectAbyssV2Character::StartFierce()
 {
-	if (canAttack && comboState == EComboState::E_None)
+	PerformInputLogic(EInputType::E_Fierce, EInputStatus::E_Press);
+
+	if (canAttack && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("We are using FIERCE"))
 		wasFierceUsed = true;
-		canMove = false;
 	}
 
+}
+
+void AProjectAbyssV2Character::ReleaseFierce()
+{
+	PerformInputLogic(EInputType::E_Fierce, EInputStatus::E_Release);
 }
 
 void AProjectAbyssV2Character::StartShort()
 {
-	if (canAttack && comboState == EComboState::E_None)
+	PerformInputLogic(EInputType::E_Short, EInputStatus::E_Press);
+
+	if (canAttack && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("We are using SHORT"))
 		wasShortUsed = true;
-		canMove = false;
 	}
 
+}
+
+void AProjectAbyssV2Character::ReleaseShort()
+{
+	PerformInputLogic(EInputType::E_Short, EInputStatus::E_Release);
 }
 
 void AProjectAbyssV2Character::StartLong()
 {
-	if (canAttack && comboState == EComboState::E_None)
+	PerformInputLogic(EInputType::E_Long, EInputStatus::E_Press);
+
+	if (canAttack && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("We are using LONG"))
 		wasLongUsed = true;
-		canMove = false;
 	}
 
 }
 
+void AProjectAbyssV2Character::ReleaseLong()
+{
+	PerformInputLogic(EInputType::E_Long, EInputStatus::E_Release);
+}
+
 void AProjectAbyssV2Character::StartRoundhouse()
 {
-	if (canAttack && comboState == EComboState::E_None)
+	PerformInputLogic(EInputType::E_Roundhouse, EInputStatus::E_Press);
+
+	if (canAttack && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("We are using ROUNDHOUSE"))
 		wasRoundhouseUsed = true;
-		canMove = false;
 	}
 
+}
+
+void AProjectAbyssV2Character::ReleaseRoundhouse()
+{
+	PerformInputLogic(EInputType::E_Roundhouse, EInputStatus::E_Release);
 }
 
 void AProjectAbyssV2Character::StartTerrorAttack()
