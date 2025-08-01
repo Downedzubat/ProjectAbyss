@@ -102,6 +102,9 @@ public:
 		bool hasUsedSuper;
 };
 
+
+
+
 //Raw input information
 USTRUCT(BlueprintType)
 struct FInputInfo
@@ -137,6 +140,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	bool isHoldingInput = false;
+};
+
+//max inputs to be captured per frame
+const int inputsPerFrame = 8;
+
+struct FInputInfoArray
+{
+public:
+	FInputInfo inputs[inputsPerFrame];
 };
 
 USTRUCT(BlueprintType)
@@ -334,7 +346,7 @@ protected:
 	void PerformInputLogic(EInputType _type, EInputStatus _status);
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	TCircularBuffer<FInputInfo> inputBuffer = TCircularBuffer<FInputInfo>(60);
+	TCircularBuffer<FInputInfoArray> inputBuffer = TCircularBuffer<FInputInfoArray>(60);
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
@@ -407,7 +419,9 @@ protected:
 	int roundsWon;
 	int curTick;
 	bool capturedInputThisFrame;
+	int currentInputsThisFrame;
 
+	//values for charge moves
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FChargeInputs> chargeTimes;
 
