@@ -991,11 +991,11 @@ void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 {
 	if (!isFacingRight)
 	{
-		if (_inputInfo.inputType == EInputType::E_Backward)
-			_inputInfo.inputType = EInputType::E_Forward;
-		else if (_inputInfo.inputType == EInputType::E_Forward)
-		{
+		if (_inputInfo.inputType == EInputType::E_Forward)
 			_inputInfo.inputType = EInputType::E_Backward;
+		else if (_inputInfo.inputType == EInputType::E_Backward)
+		{
+			_inputInfo.inputType = EInputType::E_Forward;
 		}
 	}
 
@@ -1288,7 +1288,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 		}
 	}
 	DetermineCommandToUse();
-	/*
+	
 		if (characterState != ECharacterState::VE_Jumping && comboState != EComboState::E_WallBounce && canFlip)
 		{
 			if (otherPlayer)
@@ -1312,7 +1312,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 							transform = characterMesh->GetRelativeTransform();
 							scale = transform.GetScale3D();
 							scale.Y = -1.0f;
-							//scale.X = -1.0f;
+							scale.X = -1.0f;
 							transform.SetScale3D(scale);
 
 							characterMesh->SetRelativeTransform(transform);
@@ -1338,7 +1338,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 						transform = characterMesh->GetRelativeTransform();
 						scale = transform.GetScale3D();
 						scale.Y = 1.0f;
-						//scale.X = -1.0f;
+						scale.X = 1.0f;
 						transform.SetScale3D(scale);
 
 						characterMesh->SetRelativeTransform(transform);
@@ -1346,7 +1346,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 					isFacingRight = true;
 				}
 			}
-		}*/
+		}
 }
 
 void AProjectAbyssV2Character::WinRound() {
