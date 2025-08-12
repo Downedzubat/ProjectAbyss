@@ -227,9 +227,16 @@ protected:
 	void Tick(float DeltaTime);
 
 
+	
+
+	
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
+	// ECharacterClass characterClass;
+public: 
 	/** Called for side to side input */
 	void MoveRight(float Val);
-
+	virtual void Jump() override;
 	void MoveRightController(float Val);
 	/** Handle touch inputs. */
 	void TouchStarted(const ETouchIndex::Type FingerIndex, const FVector Location);
@@ -240,10 +247,6 @@ protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(class UInputComponent* InputComponent) override;
 	// End of APawn interface
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character")
-	// ECharacterClass characterClass;
-
 	//Character Stat Vars
 	//Who is it?
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stats")
@@ -373,7 +376,7 @@ protected:
 	//Override ACharacter and APawn functionality to have more control over jumping and landing
 	//AKA..............
 	//BEGONE AIR MOVEMENT CONTROL
-	virtual void Jump() override;
+
 	virtual void StopJumping() override;
 	virtual void Landed(const FHitResult& Hit) override;
 

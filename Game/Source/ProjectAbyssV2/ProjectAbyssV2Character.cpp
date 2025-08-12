@@ -112,21 +112,21 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 {
 	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		if (gameMode->player1 == this)
-		{
-			PlayerInputComponent->BindAxis("MoveRightP1", this, &AProjectAbyssV2Character::MoveRight);
-		}
-		else
-		{
-			PlayerInputComponent->BindAxis("MoveRightP2", this, &AProjectAbyssV2Character::MoveRight);
-		}
+		//if (gameMode->player1 == this)
+		//{
+//PlayerInputComponent->BindAxis("MoveRightP1", this, &AProjectAbyssV2Character::MoveRight);
+		//}
+		//else
+		//{
+//PlayerInputComponent->BindAxis("MoveRightP2", this, &AProjectAbyssV2Character::MoveRight);
+		//}
 
 		NotifyPlayerLockedIn();
 
 		//E_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
 		// set up gameplay key bindings
-		PlayerInputComponent->BindAction("P1Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
-		PlayerInputComponent->BindAction("P1Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
+		//PlayerInputComponent->BindAction("P1Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
+		//PlayerInputComponent->BindAction("P1Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
 		PlayerInputComponent->BindAction("P1Crouch", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
 		PlayerInputComponent->BindAction("P1Crouch", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
 		PlayerInputComponent->BindAxis("MoveRightController", this, &AProjectAbyssV2Character::MoveRightController);
