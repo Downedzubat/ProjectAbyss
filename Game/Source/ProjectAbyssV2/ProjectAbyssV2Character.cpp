@@ -23,21 +23,6 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	/** Create a camera boom attached to the root(capsule)
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->SetUsingAbsoluteRotation(true); // Rotation of the character should not affect rotation of boom
-	CameraBoom->bDoCollisionTest = false;
-	CameraBoom->TargetArmLength = 500.f;
-	CameraBoom->SocketOffset = FVector(0.f,0.f,75.f);
-	CameraBoom->SetRelativeRotation(FRotator(0.f,180.f,0.f));
-
-	// Create a camera and attach to boom
-	SideViewCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("SideViewCamera"));
-	SideViewCameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	SideViewCameraComponent->bUsePawnControlRotation = false; // We don't want the controller rotating the camera
-	*/
-
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Face in the direction we are moving..
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 720.0f, 0.0f); // ...at this rotation rate
@@ -124,27 +109,6 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 		NotifyPlayerLockedIn();
 
 		//E_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
-		// set up gameplay key bindings
-		//PlayerInputComponent->BindAction("P1Jump", IE_Pressed, this, &AProjectAbyssV2Character::Jump);
-		//PlayerInputComponent->BindAction("P1Jump", IE_Released, this, &AProjectAbyssV2Character::StopJumping);
-		PlayerInputComponent->BindAction("P1Crouch", IE_Pressed, this, &AProjectAbyssV2Character::StartCrouching);
-		PlayerInputComponent->BindAction("P1Crouch", IE_Released, this, &AProjectAbyssV2Character::StopCrouching);
-		PlayerInputComponent->BindAxis("MoveRightController", this, &AProjectAbyssV2Character::MoveRightController);
-
-		//Attack Functions
-		PlayerInputComponent->BindAction("P1Jab", IE_Pressed, this, &AProjectAbyssV2Character::StartJab);
-
-		PlayerInputComponent->BindAction("P1Strong", IE_Pressed, this, &AProjectAbyssV2Character::StartStrong);
-
-		PlayerInputComponent->BindAction("P1Fierce", IE_Pressed, this, &AProjectAbyssV2Character::StartFierce);
-
-		PlayerInputComponent->BindAction("P1Short", IE_Pressed, this, &AProjectAbyssV2Character::StartShort);
-
-		PlayerInputComponent->BindAction("P1Long", IE_Pressed, this, &AProjectAbyssV2Character::StartLong);
-
-		PlayerInputComponent->BindAction("P1Roundhouse", IE_Pressed, this, &AProjectAbyssV2Character::StartRoundhouse);
-
-		PlayerInputComponent->BindAction("DebugSuper", IE_Pressed, this, &AProjectAbyssV2Character::StartTerrorAttack);
 
 	}
 }
@@ -315,11 +279,11 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
 				}
 			}
 
@@ -329,11 +293,11 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
 				}
 			}
 
@@ -346,11 +310,11 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
 				}
 			}
 
@@ -360,11 +324,11 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
 				}
 			}
 		}
@@ -989,13 +953,13 @@ void AProjectAbyssV2Character::AddToInputMap(FString _input, EInputType _type)
 
 void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 {
-	if (!isFacingRight)
+	if (isFacingRight)
 	{
-		if (_inputInfo.inputType == EInputType::E_Forward)
-			_inputInfo.inputType = EInputType::E_Backward;
-		else if (_inputInfo.inputType == EInputType::E_Backward)
-		{
+		if (_inputInfo.inputType == EInputType::E_Backward)
 			_inputInfo.inputType = EInputType::E_Forward;
+		else if (_inputInfo.inputType == EInputType::E_Forward)
+		{
+			_inputInfo.inputType = EInputType::E_Backward;
 		}
 	}
 
@@ -1182,57 +1146,6 @@ void AProjectAbyssV2Character::StopProxBlock()
 void AProjectAbyssV2Character::RemovefromBuffer()
 {
 
-}
-
-
-
-
-
-//P2 actions 
-//AGAIN PLEASE DO NOT LET PEOPLE TRY THIS, IT WON'T BE FUN
-void AProjectAbyssV2Character::P2KeyboardJab()
-{
-	StartJab();
-}
-
-void AProjectAbyssV2Character::P2KeyboardStrong()
-{
-	StartStrong();
-}
-
-void AProjectAbyssV2Character::P2KeyboardFierce()
-{
-	StartFierce();
-}
-
-void AProjectAbyssV2Character::P2KeyboardShort()
-{
-	StartShort();
-}
-
-void AProjectAbyssV2Character::P2KeyboardLong()
-{
-	StartLong();
-}
-
-void AProjectAbyssV2Character::P2KeyboardRoundhouse()
-{
-	StartRoundhouse();
-}
-
-void AProjectAbyssV2Character::P2KeyboardJump()
-{
-	Jump();
-}
-
-void AProjectAbyssV2Character::P2KeyboardStopJumping()
-{
-	StopJumping();
-}
-
-void AProjectAbyssV2Character::P2KeyboardMoveRight(float _value)
-{
-	MoveRight(_value);
 }
 
 

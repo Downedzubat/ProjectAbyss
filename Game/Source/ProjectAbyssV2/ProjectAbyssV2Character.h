@@ -177,51 +177,8 @@ class AProjectAbyssV2Character : public ACharacter
 	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	//class USpringArmComponent* CameraBoom;
 
-	void StartJab();
-	void ReleaseJab();
-	void StartStrong();
-	void ReleaseStrong();
-	void StartFierce();
-	void ReleaseFierce();
-	void StartShort();
-	void ReleaseShort();
-	void StartLong();
-	void ReleaseLong();
-	void StartRoundhouse();
-	void ReleaseRoundhouse();
-	void StartTerrorAttack();
 
-	//When in keyboard only mode use following functions to allow P2 to perform actions
-	//Please do not allow people to put themselves through this
-	//It will get messy
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardJab();
 
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardStrong();
-
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardFierce();
-
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardShort();
-
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardLong();
-
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardRoundhouse();
-
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardJump();
-
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardStopJumping();
-
-	UFUNCTION(BlueprintCallable)
-		void P2KeyboardMoveRight(float _value);
-
-	//Please heed my warning
 
 protected:
 	void Tick(float DeltaTime);
@@ -435,9 +392,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void IgnorePlayerToPlayerCollision(bool _shouldIgnore);
-	//Make the player begin crouching
-	UFUNCTION(BlueprintCallable)
-	void StartCrouching();
+
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void MoveCharacterSmoothly(FVector _start, FVector _end);
@@ -446,9 +401,7 @@ public:
 
 	
 
-	//Make the player stop crouching
-	UFUNCTION(BlueprintCallable)
-	void StopCrouching();
+
 
 	UFUNCTION(BlueprintCallable)
 	void CollidedWithProximityHitbox();
@@ -545,4 +498,26 @@ public:
 	//FORCEINLINE class UCameraComponent* GetSideViewCameraComponent() const { return SideViewCameraComponent; }
 	/** Returns CameraBoom subobject **/
 	//FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
+
+//public functions
+	public:
+		//Make the player begin crouching
+		UFUNCTION(BlueprintCallable)
+		void StartCrouching();
+		//Make the player stop crouching
+		UFUNCTION(BlueprintCallable)
+		void StopCrouching();
+		void StartJab();
+		void ReleaseJab();
+		void StartStrong();
+		void ReleaseStrong();
+		void StartFierce();
+		void ReleaseFierce();
+		void StartShort();
+		void ReleaseShort();
+		void StartLong();
+		void ReleaseLong();
+		void StartRoundhouse();
+		void ReleaseRoundhouse();
+		void StartTerrorAttack();
 };

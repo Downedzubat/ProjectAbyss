@@ -33,6 +33,18 @@ void APAController::SetupInputComponent()
 	}
 
 	InputComponent->BindAction("JumpP1", IE_Pressed, this, &APAController::CallJump);
+	InputComponent->BindAction("P1Crouch", IE_Pressed, this, &APAController::CallStartCrouching);
+	InputComponent->BindAction("P1Crouch", IE_Released, this, &APAController::CallStopCrouching);
+	//InputComponent->BindAxis("MoveRightController", this, &APAController::CallMoveRightController);
+
+	//Attack Functions
+	InputComponent->BindAction("P1Jab", IE_Pressed, this, &APAController::CallStartJab);
+	InputComponent->BindAction("P1Strong", IE_Pressed, this, &APAController::CallStartStrong);
+	InputComponent->BindAction("P1Fierce", IE_Pressed, this, &APAController::CallStartFierce);
+	InputComponent->BindAction("P1Short", IE_Pressed, this, &APAController::CallStartShort);
+	InputComponent->BindAction("P1Long", IE_Pressed, this, &APAController::CallStartLong);
+	InputComponent->BindAction("P1Roundhouse", IE_Pressed, this, &APAController::CallStartRoundhouse);
+	InputComponent->BindAction("DebugSuper", IE_Pressed, this, &APAController::CallStartTerrorAttack);
 }
 
 
@@ -50,6 +62,90 @@ void APAController::CallJump()
 	if (possessedPawn)
 	{
 		possessedPawn->Jump();
+	}
+}
+
+void APAController::CallStopJumping()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StopJumping();
+	}
+}
+
+void APAController::CallStartCrouching()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartCrouching();
+	}
+}
+
+void APAController::CallStopCrouching()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StopCrouching();
+	}
+}
+
+void APAController::CallStartJab()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartJab();
+	}
+}
+
+void APAController::CallStartStrong()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartStrong();
+	}
+}
+
+void APAController::CallStartFierce()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartFierce();
+	}
+}
+
+void APAController::CallStartShort()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartShort();
+	}
+}
+
+void APAController::CallStartLong()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartLong();
+	}
+}
+
+void APAController::CallStartRoundhouse()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartRoundhouse();
+	}
+}
+
+void APAController::CallPerformStartInputLogic()
+{
+}
+
+void APAController::CallStartTerrorAttack()
+{
+	if (possessedPawn)
+	{
+		possessedPawn->StartTerrorAttack();
 	}
 }
 

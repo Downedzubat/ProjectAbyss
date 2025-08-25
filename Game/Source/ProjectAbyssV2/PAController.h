@@ -30,6 +30,34 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void CallJump();
+
+	UFUNCTION(BlueprintCallable)
+	void CallStopJumping();
+
+	UFUNCTION(BlueprintCallable)
+	void CallStartCrouching();
+
+	UFUNCTION(BlueprintCallable)
+	void CallStopCrouching();
+
+	UFUNCTION(BlueprintCallable)
+	void CallStartJab();
+
+	UFUNCTION(BlueprintCallable)
+	void CallStartStrong();
+
+	UFUNCTION(BlueprintCallable)
+	void CallStartFierce();
+	UFUNCTION(BlueprintCallable)
+	void CallStartShort();
+	UFUNCTION(BlueprintCallable)
+	void CallStartLong();
+	UFUNCTION(BlueprintCallable)
+	void CallStartRoundhouse();
+	UFUNCTION(BlueprintCallable)
+	void CallPerformStartInputLogic();
+	UFUNCTION(BlueprintCallable)
+	void CallStartTerrorAttack();
 	
 
 	AProjectAbyssV2Character* possessedPawn;
