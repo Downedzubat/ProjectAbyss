@@ -61,6 +61,15 @@ enum class EInputStatus : uint8
 	E_Hold		UMETA(DisplayName = "HOLD")
 };
 
+UENUM(BlueprintType)
+enum class EAttackState : uint8
+{
+	E_None				UMETA(DisplayName = "NONE"),
+	E_AttackStarted		UMETA(DisplayName = "ATTACK_STARTUP"),
+	E_AttackActive		UMETA(DisplayName = "ATTACK_ACTIVE"),
+	E_AttackRecovery	UMETA(DisplayName = "ATTACK_RECOVERY")
+};
+
 //This struct is used to form commands - chaining them together gives us special moves
 USTRUCT(BlueprintType)
 struct FCommandInput
@@ -226,6 +235,9 @@ public:
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Details")
 	EComboState comboState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Details")
+	EAttackState attackState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float jumpHeight;

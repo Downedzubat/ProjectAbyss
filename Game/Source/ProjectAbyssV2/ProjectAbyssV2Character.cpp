@@ -39,6 +39,7 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 
 	characterState = ECharacterState::VE_Default;
 	comboState = EComboState::E_None;
+	attackState = EAttackState::E_None;
 	characterClass = ECharacterClass::VE_Default;
 	
 	scale = FVector(0.0f, 0.0f, 0.0f);
@@ -227,17 +228,22 @@ void AProjectAbyssV2Character::StartCrouching()
 void AProjectAbyssV2Character::BeginHitstop(float _damageAmount)
 {
 	float hitstopTime = _damageAmount * hitstopModifier;
-	if (hitstopTime > 0)
+	if (otherPlayer->playerHealth > 0.01f)
 	{
-		if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+		if (hitstopTime > 0)
 		{
-			CustomTimeDilation = 0.0f;
-			otherPlayer->CustomTimeDilation = 0.0f;
-			gameMode->hitstopFrames = hitstopTime;
+			if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+			{
+				CustomTimeDilation = 0.0f;
+				otherPlayer->CustomTimeDilation = 0.0f;
+				gameMode->hitstopFrames = hitstopTime;
 
-			gameMode->isTimerActive = true;
+				gameMode->isTimerActive = true;
+			}
 		}
+
 	}
+
 }
 
 
@@ -838,9 +844,10 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			}
 			
 			BeginStun();
+			//BeginHitstop(_damageAmount);
 		}
 		
-		//BeginHitstop(_damageAmount);
+		
 		PerformKnockback(_knockbackAmount, _launchAmount, true);
 
 		if (otherPlayer)
@@ -848,6 +855,8 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			otherPlayer->atkHit = true;
 			otherPlayer->terrorGauge += _damageAmount * 0.85f;
 		}
+
+		
 
 	
 	}
@@ -881,9 +890,10 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			}
 
 			BeginStun();
+			//BeginHitstop(_damageAmount);
 		 }
 	}
-	//BeginHitstop(reducedDamage);
+	
 
 	//if (comboState != EComboState::E_Launched && stunFrames > 0)
 	//{
@@ -1107,8 +1117,11 @@ void AProjectAbyssV2Character::DetermineCommandToUse()
 				moveToUse = moveBuffer[i];
 			}
 		}
-
-		StartCommand(moveToUse.name);
+		if (attackState == EAttackState::E_None || attackState == EAttackState::E_AttackRecovery)
+		{
+			StartCommand(moveToUse.name);
+		}
+		
 		moveBuffer.Empty();
 	}
 }
@@ -1292,36 +1305,43 @@ void AProjectAbyssV2Character::WinMatch()
 }
 void AProjectAbyssV2Character::KO()
 {
-	if (playerHealth <= 0)
-	{
-		if (otherPlayer->playerHealth <= 0)
+	UE_LOG(LogTemp, Error, TEXT("WE ARE GETTING KO'D"));
+		if (playerHealth <= 0)
 		{
-			DoubleKO();
-		}
-		else
-		{
-			otherPlayer->roundsWon++;
-			hasLostRound = true;
-			NotifyKO();
-			NotifyRoundEnd();
-			UpdateHUDRoundIcons();
-		}
+				if (otherPlayer->playerHealth <= 0)
+				{
+					DoubleKO();
+				}
+				else
+				{
 
-	}
+					
+					otherPlayer->roundsWon++;
+
+					hasLostRound = true;
+					NotifyKO();
+					NotifyRoundEnd();
+					UpdateHUDRoundIcons();
+				}
+
+		}
+	
 }
 
 void AProjectAbyssV2Character::DoubleKO()
 {
-	
-	roundsWon++;
-	otherPlayer->roundsWon++;
-	hasLostRound = true;
-	otherPlayer->hasLostRound = true;
-	
 
-	NotifyDoubleKO();
-	NotifyRoundEnd();
-	UpdateHUDRoundIcons();
+		roundsWon++;
+		otherPlayer->roundsWon++;
+		hasLostRound = true;
+		otherPlayer->hasLostRound = true;
+
+
+		NotifyDoubleKO();
+		NotifyRoundEnd();
+		UpdateHUDRoundIcons();
+	
+	
 }
 
 

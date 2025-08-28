@@ -32,7 +32,8 @@ void APAController::SetupInputComponent()
 		//}
 	}
 
-	InputComponent->BindAction("JumpP1", IE_Pressed, this, &APAController::CallJump);
+	InputComponent->BindAction("P1Jump", IE_Pressed, this, &APAController::CallJump);
+	InputComponent->BindAction("P1Jump", IE_Released, this, &APAController::CallStopJumping);
 	InputComponent->BindAction("P1Crouch", IE_Pressed, this, &APAController::CallStartCrouching);
 	InputComponent->BindAction("P1Crouch", IE_Released, this, &APAController::CallStopCrouching);
 	//InputComponent->BindAxis("MoveRightController", this, &APAController::CallMoveRightController);
