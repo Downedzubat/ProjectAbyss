@@ -117,7 +117,7 @@ void AProjectAbyssV2Character::Jump()
 {
 	//ACharacter::Jump();
 	PerformInputLogic(EInputType::E_Jump, EInputStatus::E_Press);
-	if (canMove && !isCrouching && comboState == EComboState::E_None)
+	if (characterState != ECharacterState::VE_Jumping && canMove && !isCrouching && comboState == EComboState::E_None)
 	{
 		//IgnorePlayerToPlayerCollision(true);
 
@@ -435,7 +435,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (currentDistanceApart >= maxDistanceApart)
 				{
-					if ((currentDistanceApart + Value < currentDistanceApart && !isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && isFacingRight))
+					if ((currentDistanceApart + Value < currentDistanceApart && isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && !isFacingRight))
 					{
 						// add movement in that direction
 						if (canMove) 
@@ -454,16 +454,22 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 					}
 
 				}
+				
 			}
 		}
 	}
+
+	
 }
+	
 
 
 // This function will eventually be un-needed
 // But for now, it's here, plaguing this code.
 void AProjectAbyssV2Character::MoveRightController(float Value)
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("This is enum %s"), *UEnum::GetValueAsName(characterState).ToString());
 	if (!isCrouching)
 	{
 		if (Value > 0.20f)
@@ -629,7 +635,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 
 					if (currentDistanceApart >= maxDistanceApart)
 					{
-						if ((currentDistanceApart + Value < currentDistanceApart && !isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && isFacingRight))
+						if ((currentDistanceApart + Value < currentDistanceApart && isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && !isFacingRight))
 						{
 							// add movement in that direction
 							if (canMove)
@@ -646,12 +652,18 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 							// add movement in that direction
 							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
 						}
+						UE_LOG(LogTemp, Warning, TEXT("This is enum %s"), *UEnum::GetValueAsName(characterState).ToString());
 
 					}
+
 				}
 			}
 		}
+			
 	}
+	
+
+	//UE_LOG(LogTemp, Warning, TEXT("This is enum %s"), *UEnum::GetValueAsName(characterState).ToString());
 }
 
 
@@ -1152,6 +1164,7 @@ void AProjectAbyssV2Character::RemovefromBuffer()
 void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 	
 	//No input given this frame
 	if (!capturedInputThisFrame)
@@ -1260,6 +1273,9 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 				}
 			}
 		}
+		
+		
+	
 }
 
 void AProjectAbyssV2Character::WinRound() {

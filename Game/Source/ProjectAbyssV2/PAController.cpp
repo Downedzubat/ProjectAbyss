@@ -24,12 +24,12 @@ void APAController::SetupInputComponent()
 	{
 		if (gameMode->player1 == Cast<AProjectAbyssV2Character>(GetPawn()))
 		{
-			InputComponent->BindAxis("MoveRightP1", this, &APAController::CallMoveRight);
+			InputComponent->BindAxis("MoveRight", this, &APAController::CallMoveRight);
 		}
-		else
-		{
-			InputComponent->BindAxis("MoveRightP2", this, &APAController::CallMoveRight);
-		}
+		//else
+		//{
+		//	InputComponent->BindAxis("MoveRightP2", this, &APAController::CallMoveRight);
+		//}
 	}
 
 	InputComponent->BindAction("JumpP1", IE_Pressed, this, &APAController::CallJump);
