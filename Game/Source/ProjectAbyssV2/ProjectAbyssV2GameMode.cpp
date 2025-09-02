@@ -38,3 +38,9 @@ void AProjectAbyssV2GameMode::Tick(float DeltaTime)
 	}
 }
 
+void AProjectAbyssV2GameMode::MatchWon(AProjectAbyssV2Character* _winningCharacter)
+{
+	TriggerMatchWinEffects(_winningCharacter);
+}
+
+

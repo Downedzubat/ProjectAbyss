@@ -810,16 +810,22 @@ void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 	}
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType)
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType, FVector _hitLocation)
 {
+	bool isKOFromHit = false;
 	if (!((characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_HIGH || _hitType == EHitType::E_OVERHEAD) ||
 		(characterState == ECharacterState::VE_Blocking && !isCrouching && _hitType == EHitType::E_MID) ||
 		(characterState == ECharacterState::VE_Blocking && isCrouching && _hitType == EHitType::E_LOW)))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
 		playerHealth -= _damageAmount;
-		
+		if (playerHealth < 0.00f)
+		{
+			isKOFromHit = true;
+		}
 
+		//Play VFX and SFX for damage taken
+		PlayDamageEffects(_hitLocation, isKOFromHit);
 		
 		stunFrames = _hitstunFrames;
 		
@@ -842,13 +848,13 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			case EHitType::E_NONE:
 				break;
 			}
-			
+			PerformKnockback(_knockbackAmount, _launchAmount, false);
 			BeginStun();
 			BeginHitstop(_damageAmount);
 		}
 		
 		
-		PerformKnockback(_knockbackAmount, _launchAmount, true);
+	
 
 		if (otherPlayer)
 		{
@@ -864,7 +870,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 	{
 		float reducedDamage = _damageAmount * 0.5f;
 		playerHealth -= reducedDamage;
-
+		PlayBlockEffects(_hitLocation, isKOFromHit);
 	
 
 		stunFrames = _blockstunFrames;
@@ -890,6 +896,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			}
 
 			BeginStun();
+			PerformKnockback(_knockbackAmount, _launchAmount, true);
 			BeginHitstop(_damageAmount);
 		 }
 	}
@@ -908,6 +915,17 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 	if (playerHealth < 0.00f)
 	{
 		playerHealth = 0.00f;
+		
+	}
+	if (isKOFromHit)
+	{
+		if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			gameMode->isTimerActive = false;
+		}
+		playerHealth = 0.00f;
+		otherPlayer->WinRound();
+		NotifyKO();
 	}
 }
 
@@ -1173,6 +1191,11 @@ void AProjectAbyssV2Character::RemovefromBuffer()
 
 }
 
+void AProjectAbyssV2Character::RoundWon(AProjectAbyssV2Character* _winningCharacter)
+{
+	TriggerRoundWinEffects(_winningCharacter);
+}
+
 
 void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
@@ -1291,9 +1314,21 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 	
 }
 
-void AProjectAbyssV2Character::WinRound() {
-	otherPlayer->hasLostRound = true;
-	++roundsWon;
+void AProjectAbyssV2Character::WinRound() 
+{
+	if (!otherPlayer->hasLostRound)
+	{
+		otherPlayer->hasLostRound = true;
+		++roundsWon;
+
+		if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+		{
+			if (roundsWon == gameMode->numRounds)
+			{
+				gameMode->MatchWon(this);
+			}
+		}
+	}
 	NotifyRoundEnd();
 	UpdateHUDRoundIcons();
 }
@@ -1303,51 +1338,15 @@ void AProjectAbyssV2Character::WinMatch()
 	canAttack = false;
 	hasWonMatch = true;
 }
-void AProjectAbyssV2Character::KO()
-{
-	
-	if (CustomTimeDilation == 0 && otherPlayer->CustomTimeDilation == 0)
-	{
-		if (playerHealth <= 0 && otherPlayer->hasLostRound == false)
-		{
-			UE_LOG(LogTemp, Error, TEXT("WE ARE GETTING KO'D"));
-
-			if (otherPlayer->playerHealth <= 0)
-			{
-				DoubleKO();
-			}
-
-
-
-
-			otherPlayer->roundsWon++;
-
-			hasLostRound = true;
-			NotifyKO();
-			NotifyRoundEnd();
-			UpdateHUDRoundIcons();
-		}
-
-	}
-		
-		
-	
-}
 
 void AProjectAbyssV2Character::DoubleKO()
 {
-
-		roundsWon++;
 		otherPlayer->roundsWon++;
 		hasLostRound = true;
 		otherPlayer->hasLostRound = true;
 
-
 		NotifyDoubleKO();
-		NotifyRoundEnd();
 		UpdateHUDRoundIcons();
-	
-	
 }
 
 

@@ -431,8 +431,7 @@ public:
 	void NotifyRoundEnd();
 
 
-	UFUNCTION(BlueprintCallable)
-	void KO();
+
 
 
 	UFUNCTION(BlueprintCallable)
@@ -464,9 +463,22 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void RemovefromBuffer();
 
+	//Show visual effects and play audio when hits land or are blocked.
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayDamageEffects(FVector _hitLocation, bool _isFinishingBlow = false);
+	UFUNCTION(BlueprintImplementableEvent)
+	void PlayBlockEffects(FVector _hitLocation, bool _isFinishingBlow = false);
+
+
+	//The round has been won by indicated character
+	UFUNCTION(BlueprintCallable)
+	void RoundWon(AProjectAbyssV2Character* _winningCharacter = nullptr);
+	//Trigger any effects which should trigger on round win
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerRoundWinEffects(AProjectAbyssV2Character* _winningCharacter = nullptr);
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _HitType);
+	void TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _HitType, FVector _hitLocation);
 
 	void PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked);
 

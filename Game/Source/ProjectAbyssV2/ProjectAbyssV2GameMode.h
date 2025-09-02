@@ -22,6 +22,11 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void BPTick(float DeltaTime);
 
+	UFUNCTION(BlueprintCallable)
+	void MatchWon(AProjectAbyssV2Character* _winningCharacter = nullptr);
+	UFUNCTION(BlueprintImplementableEvent)
+	void TriggerMatchWinEffects(AProjectAbyssV2Character* _winningCharacter = nullptr);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 	AProjectAbyssV2Character* player1;
 
