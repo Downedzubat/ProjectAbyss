@@ -844,7 +844,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			}
 			
 			BeginStun();
-			//BeginHitstop(_damageAmount);
+			BeginHitstop(_damageAmount);
 		}
 		
 		
@@ -890,7 +890,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			}
 
 			BeginStun();
-			//BeginHitstop(_damageAmount);
+			BeginHitstop(_damageAmount);
 		 }
 	}
 	
@@ -1305,26 +1305,32 @@ void AProjectAbyssV2Character::WinMatch()
 }
 void AProjectAbyssV2Character::KO()
 {
-	UE_LOG(LogTemp, Error, TEXT("WE ARE GETTING KO'D"));
-		if (playerHealth <= 0)
+	
+	if (CustomTimeDilation == 0 && otherPlayer->CustomTimeDilation == 0)
+	{
+		if (playerHealth <= 0 && otherPlayer->hasLostRound == false)
 		{
-				if (otherPlayer->playerHealth <= 0)
-				{
-					DoubleKO();
-				}
-				else
-				{
+			UE_LOG(LogTemp, Error, TEXT("WE ARE GETTING KO'D"));
 
-					
-					otherPlayer->roundsWon++;
+			if (otherPlayer->playerHealth <= 0)
+			{
+				DoubleKO();
+			}
 
-					hasLostRound = true;
-					NotifyKO();
-					NotifyRoundEnd();
-					UpdateHUDRoundIcons();
-				}
 
+
+
+			otherPlayer->roundsWon++;
+
+			hasLostRound = true;
+			NotifyKO();
+			NotifyRoundEnd();
+			UpdateHUDRoundIcons();
 		}
+
+	}
+		
+		
 	
 }
 
