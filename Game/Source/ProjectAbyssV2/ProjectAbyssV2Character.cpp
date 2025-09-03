@@ -933,7 +933,7 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 {
 	if (characterState ==  ECharacterState::VE_Blocking)
 	{
-		if (isFacingRight)
+		if (!isFacingRight)
 		{
 			CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
 		}
@@ -946,10 +946,9 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 	{
 		if (_launchAmount > 0.0f)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("We're being launched for %f."), _launchAmount);
 			comboState = EComboState::E_Launched;
 			GetCharacterMovement()->GravityScale *= 0.7;
-			if (isFacingRight)
+			if (!isFacingRight)
 			{
 				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
 			}
@@ -957,8 +956,20 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 			{
 				CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), false, false);
 			}
-			
+
 		}
+		else {
+			if (!isFacingRight)
+			{
+				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
+			}
+			else
+			{
+				CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), false, false);
+			}
+		}
+	
+
 
 	
 	}
