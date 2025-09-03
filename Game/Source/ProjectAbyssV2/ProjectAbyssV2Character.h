@@ -13,8 +13,8 @@ UENUM(BlueprintType)
 enum class ECharacterState : uint8
 {
 	VE_Default     UMETA(DisplayName = "NOT_MOVING"),
-	VE_MovingRight UMETA(DisplayName = "MOVING_RIGHT"),
-	VE_MovingLeft  UMETA(DisplayName = "MOVING_LEFT"),
+	VE_MovingForward UMETA(DisplayName = "MOVING_FORWARD"),
+	VE_MovingBackward  UMETA(DisplayName = "MOVING_BACKWARD"),
 	VE_Jumping     UMETA(DisplayName = "JUMPING"),
 	VE_Crouching   UMETA(DisplayName = "CROUCHING"),
 	VE_Blocking    UMETA(DisplayName = "BLOCKING")
@@ -95,10 +95,13 @@ struct FCommand
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		FString name;
+	FString name;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-		TArray<FCommandInput> inputTypes;
+	TArray<FCommandInput> inputTypes;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	ECharacterState requiredState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	int64 maxFramesBetweenInputs = 12;

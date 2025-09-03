@@ -122,11 +122,11 @@ void AProjectAbyssV2Character::Jump()
 	{
 		//IgnorePlayerToPlayerCollision(true);
 
-		if (characterState == ECharacterState::VE_MovingLeft)
+		if ((characterState == ECharacterState::VE_MovingBackward && !isFacingRight) || (characterState == ECharacterState::VE_MovingForward && isFacingRight))
 		{
 			CustomLaunchCharacter(FVector(0.0f, jumpDistance, jumpHeight), true, true);
 		}
-		else if (characterState == ECharacterState::VE_MovingRight)
+		else if ((characterState == ECharacterState::VE_MovingForward && isFacingRight) || (characterState == ECharacterState::VE_MovingBackward && !isFacingRight))
 		{
 			CustomLaunchCharacter(FVector(0.0f, -jumpDistance, jumpHeight), true, true);
 		}
@@ -385,21 +385,30 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 				{
 					if (Value > 0.01f)
 					{
-						characterState = ECharacterState::VE_MovingRight;
+						
 						hasReleasedRightAxisInput = false;
 
 						if (!isFacingRight)
 						{
+							characterState = ECharacterState::VE_MovingBackward;
 							isPressingBackward = true;
+						}
+						else
+						{
+							characterState = ECharacterState::VE_MovingForward;
 						}
 					}
 					else if (Value < -0.01f)
 					{
-						characterState = ECharacterState::VE_MovingLeft;
+						
 						hasReleasedLeftAxisInput = false;
 						if (isFacingRight)
 						{
+							characterState = ECharacterState::VE_MovingBackward;
 							isPressingBackward = true;
+						}
+						else {
+							characterState = ECharacterState::VE_MovingForward;
 						}
 					}
 					else
@@ -475,7 +484,8 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 void AProjectAbyssV2Character::MoveRightController(float Value)
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("This is enum %s"), *UEnum::GetValueAsName(characterState).ToString());
+	//OH GOD
+//Best hope you have an evening free enjoying how I came to this solution
 	if (!isCrouching)
 	{
 		if (Value > 0.20f)
@@ -486,11 +496,11 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
 				}
 			}
 
@@ -500,11 +510,11 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
 				}
 			}
 
@@ -517,11 +527,11 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
 				}
 			}
 
@@ -531,11 +541,11 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
 				}
 			}
 		}
@@ -586,27 +596,36 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 				{
 					if (Value > 0.20f)
 					{
-						characterState = ECharacterState::VE_MovingRight;
+
 						hasReleasedRightAxisInput = false;
 
 						if (!isFacingRight)
 						{
+							characterState = ECharacterState::VE_MovingBackward;
 							isPressingBackward = true;
+						}
+						else
+						{
+							characterState = ECharacterState::VE_MovingForward;
 						}
 					}
 					else if (Value < -0.20f)
 					{
-						characterState = ECharacterState::VE_MovingLeft;
+
 						hasReleasedLeftAxisInput = false;
 						if (isFacingRight)
 						{
+							characterState = ECharacterState::VE_MovingBackward;
 							isPressingBackward = true;
+						}
+						else {
+							characterState = ECharacterState::VE_MovingForward;
 						}
 					}
 					else
 					{
 						characterState = ECharacterState::VE_Default;
-						//hasReleasedAxisInput = true;
+						//hasReleasedRightAxisInput = true;
 						isPressingBackward = false;
 					}
 				}
@@ -635,39 +654,36 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 					//hasReleasedAxisInput = true;
 					isPressingBackward = false;
 				}
-				if (otherPlayer)
+			}
+			if (otherPlayer)
+			{
+				float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
+
+				if (currentDistanceApart >= maxDistanceApart)
 				{
-					float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
-
-					if (currentDistanceApart >= maxDistanceApart)
+					if ((currentDistanceApart + Value < currentDistanceApart && isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && !isFacingRight))
 					{
-						if ((currentDistanceApart + Value < currentDistanceApart && isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && !isFacingRight))
-						{
-							// add movement in that direction
-							if (canMove)
-							{
-								AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-							}
-
-						}
-					}
-					else
-					{
+						// add movement in that direction
 						if (canMove)
 						{
-							// add movement in that direction
 							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
 						}
-						UE_LOG(LogTemp, Warning, TEXT("This is enum %s"), *UEnum::GetValueAsName(characterState).ToString());
 
+					}
+				}
+				else
+				{
+					if (canMove)
+					{
+						// add movement in that direction
+						AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
 					}
 
 				}
+
 			}
 		}
-			
 	}
-	
 
 	//UE_LOG(LogTemp, Warning, TEXT("This is enum %s"), *UEnum::GetValueAsName(characterState).ToString());
 }
@@ -1076,8 +1092,15 @@ void AProjectAbyssV2Character::CheckBufferForCommandType(EInputStatus _inputStat
 					}
 					if (correctSequenceCounter == -1 && _inputStatus != EInputStatus::E_Release)
 					{
-						moveBuffer.Add(currentCommand);
-						break;
+						if (characterState == currentCommand.requiredState)
+						{
+							moveBuffer.Add(currentCommand);
+							break;
+						}
+						else
+						{
+							correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+						}
 					}
 				}
 				else
@@ -1221,7 +1244,11 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 		noneInput.frame = GFrameCounter;
 		noneInput.chargedFrames = 0;
 
-		inputBuffer[curTick].inputs[0] = noneInput;
+		for (int i = 0; i < inputsPerFrame; ++i)
+		{
+			inputBuffer[curTick].inputs[i] = noneInput;
+		}
+		
 	}
 	else
 	{
