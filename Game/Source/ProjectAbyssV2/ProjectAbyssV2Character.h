@@ -15,9 +15,12 @@ enum class ECharacterState : uint8
 	VE_Default     UMETA(DisplayName = "NOT_MOVING"),
 	VE_MovingForward UMETA(DisplayName = "MOVING_FORWARD"),
 	VE_MovingBackward  UMETA(DisplayName = "MOVING_BACKWARD"),
-	VE_Jumping     UMETA(DisplayName = "JUMPING"),
+	VE_NeutralJumping     UMETA(DisplayName = "NEUTRAL_JUMPING"),
+	VE_ForwardJumping     UMETA(DisplayName = "FORWARD_JUMPING"),
+	VE_BackwardJumping     UMETA(DisplayName = "BACKWARD_JUMPING"),
 	VE_Crouching   UMETA(DisplayName = "CROUCHING"),
-	VE_Blocking    UMETA(DisplayName = "BLOCKING")
+	VE_Blocking    UMETA(DisplayName = "BLOCKING"),
+	VE_CrouchBlocking    UMETA(DisplayName = "CROUCH_BLOCKING")
 };
 
 UENUM(BlueprintType)
@@ -259,9 +262,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float gravityScale;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool isCrouching;
 
 	//The amount of frames which an attack will stun for
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")

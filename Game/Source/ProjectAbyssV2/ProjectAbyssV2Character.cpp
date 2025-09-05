@@ -118,26 +118,44 @@ void AProjectAbyssV2Character::Jump()
 {
 	//ACharacter::Jump();
 	PerformInputLogic(EInputType::E_Jump, EInputStatus::E_Press);
-	if (characterState != ECharacterState::VE_Jumping && canMove && !isCrouching && comboState == EComboState::E_None)
+	if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking && comboState == EComboState::E_None && jumpCount)
 	{
 		//IgnorePlayerToPlayerCollision(true);
 
 		if ((characterState == ECharacterState::VE_MovingBackward && !isFacingRight) || (characterState == ECharacterState::VE_MovingForward && isFacingRight))
 		{
+			if (characterState == ECharacterState::VE_MovingForward)
+			{
+				characterState = ECharacterState::VE_ForwardJumping;
+			}
+			else
+			{
+				characterState = ECharacterState::VE_BackwardJumping;
+			}
+			//Use this method for static distances on jump.
 			CustomLaunchCharacter(FVector(0.0f, jumpDistance, jumpHeight), true, true);
 		}
 		else if ((characterState == ECharacterState::VE_MovingForward && isFacingRight) || (characterState == ECharacterState::VE_MovingBackward && !isFacingRight))
 		{
+			if (characterState == ECharacterState::VE_MovingForward)
+			{
+				characterState = ECharacterState::VE_ForwardJumping;
+			}
+			else
+			{
+				characterState = ECharacterState::VE_BackwardJumping;
+			}
 			CustomLaunchCharacter(FVector(0.0f, -jumpDistance, jumpHeight), true, true);
 		}
 		else
 		{
+			characterState = ECharacterState::VE_NeutralJumping;
 			CustomLaunchCharacter(FVector(0.0f, 0.0f, jumpHeight), false, true);
 		}
 
 
 		++jumpCount;
-		characterState = ECharacterState::VE_Jumping;
+
 	}
 	else if (comboState == EComboState::E_Knockdown)
 	{
@@ -155,7 +173,7 @@ void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 {
 
 	GetMovementComponent()->StopMovementImmediately();
-	if (characterState == ECharacterState::VE_Jumping)
+	if (characterState == ECharacterState::VE_NeutralJumping || characterState == ECharacterState::VE_ForwardJumping || characterState == ECharacterState::VE_BackwardJumping)
 	{
 
 			
@@ -218,8 +236,16 @@ void AProjectAbyssV2Character::StartCrouching()
 	 if (canMove && comboState == EComboState::E_None)
 	 {
 		Crouch();
-		characterState = ECharacterState::VE_Crouching;
-		isCrouching = true;
+
+		if (characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking)
+		{
+			characterState = ECharacterState::VE_Crouching;
+		}
+		else
+		{
+			characterState = ECharacterState::VE_CrouchBlocking;
+		}
+		
 		canMove = false;
 	}
 
@@ -265,8 +291,15 @@ void AProjectAbyssV2Character::StopCrouching()
 	if (comboState == EComboState::E_None)
 	{
 		UnCrouch();
-		characterState = ECharacterState::VE_Default;
-		isCrouching = false;
+		if (characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking)
+		{
+			characterState = ECharacterState::VE_Default;
+		}
+		else
+		{
+			characterState = ECharacterState::VE_Blocking;
+		}
+
 		canMove = true;
 	}
 }
@@ -275,7 +308,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 {
 	//OH GOD
 	//Best hope you have an evening free enjoying how I came to this solution
-	if (!isCrouching)
+	if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
 	{
 		if (Value > 0.01f)
 		{
@@ -379,9 +412,9 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 	{
 		if (MainMenu->isDeviceForMultiplePlayers)
 		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking && comboState == EComboState::E_None)
 			{
-				if (characterState != ECharacterState::VE_Jumping && comboState != EComboState::E_Launched)
+				if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_Launched)
 				{
 					if (Value > 0.01f)
 					{
@@ -419,7 +452,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 					}
 				}
 			}
-			else if (canMove && isCrouching)
+			else if (canMove && (characterState == ECharacterState::VE_Crouching || characterState == ECharacterState::VE_CrouchBlocking))
 			{
 				if (Value > 0.01f)
 				{
@@ -484,11 +517,9 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 void AProjectAbyssV2Character::MoveRightController(float Value)
 {
 
-	//OH GOD
-//Best hope you have an evening free enjoying how I came to this solution
-	if (!isCrouching)
+	if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
 	{
-		if (Value > 0.20f)
+		if (Value > 0.01f)
 		{
 			if (!hasReleasedLeftAxisInput)
 			{
@@ -519,7 +550,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 			}
 
 		}
-		else if (Value < -0.20f)
+		else if (Value < -0.01f)
 		{
 			if (!hasReleasedRightAxisInput)
 			{
@@ -552,7 +583,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 	}
 	else
 	{
-		if (Value > 0.20f)
+		if (Value > 0.01f)
 		{
 			if (hasReleasedRightAxisInput)
 			{
@@ -568,7 +599,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 				}
 			}
 		}
-		else if (Value < -0.20f)
+		else if (Value < -0.01f)
 		{
 			if (hasReleasedLeftAxisInput)
 			{
@@ -588,13 +619,13 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 	}
 	if (auto MainMenu = Cast<UMainMenu>(GetGameInstance()))
 	{
-		if (!MainMenu->isDeviceForMultiplePlayers)
+		if (MainMenu->isDeviceForMultiplePlayers)
 		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && comboState == EComboState::E_None)
+			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking && comboState == EComboState::E_None)
 			{
-				if (characterState != ECharacterState::VE_Jumping && comboState != EComboState::E_Launched)
+				if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_Launched)
 				{
-					if (Value > 0.20f)
+					if (Value > 0.01f)
 					{
 
 						hasReleasedRightAxisInput = false;
@@ -609,7 +640,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 							characterState = ECharacterState::VE_MovingForward;
 						}
 					}
-					else if (Value < -0.20f)
+					else if (Value < -0.01f)
 					{
 
 						hasReleasedLeftAxisInput = false;
@@ -630,9 +661,9 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 					}
 				}
 			}
-			else if (canMove && isCrouching)
+			else if (canMove && (characterState == ECharacterState::VE_Crouching || characterState == ECharacterState::VE_CrouchBlocking))
 			{
-				if (Value > 0.20f)
+				if (Value > 0.01f)
 				{
 					hasReleasedRightAxisInput = false;
 					if (!isFacingRight)
@@ -640,7 +671,7 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 						isPressingBackward = true;
 					}
 				}
-				else if (Value < -0.20f)
+				else if (Value < -0.01f)
 				{
 					hasReleasedLeftAxisInput = false;
 
@@ -684,8 +715,6 @@ void AProjectAbyssV2Character::MoveRightController(float Value)
 			}
 		}
 	}
-
-	//UE_LOG(LogTemp, Warning, TEXT("This is enum %s"), *UEnum::GetValueAsName(characterState).ToString());
 }
 
 
@@ -829,9 +858,9 @@ void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType, FVector _hitLocation)
 {
 	bool isKOFromHit = false;
-	if (!((characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_HIGH || _hitType == EHitType::E_OVERHEAD) ||
-		(characterState == ECharacterState::VE_Blocking && !isCrouching && _hitType == EHitType::E_MID) ||
-		(characterState == ECharacterState::VE_Blocking && isCrouching && _hitType == EHitType::E_LOW)))
+	if (!((characterState == ECharacterState::VE_Blocking || characterState == ECharacterState::VE_CrouchBlocking && _hitType == EHitType::E_HIGH || _hitType == EHitType::E_OVERHEAD) ||
+		(characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_MID) ||
+		(characterState == ECharacterState::VE_CrouchBlocking && _hitType == EHitType::E_LOW)))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
 		playerHealth -= _damageAmount;
@@ -1006,8 +1035,18 @@ void AProjectAbyssV2Character::EndStun()
 {
 	if (comboState != EComboState::E_Launched && comboState != EComboState::E_Knockdown && comboState != EComboState::E_Recovery && comboState != EComboState::E_WallBounce && comboState != EComboState::E_FloorBounce)
 	{
-		characterState = ECharacterState::VE_Default;
+
+		if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
+		{
+			characterState = ECharacterState::VE_Default;
+		}
+		else
+		{
+			characterState = ECharacterState::VE_Crouching;
+		}
+		
 		comboState = EComboState::E_None;
+
 	}
 	
 	canMove = true;
@@ -1208,7 +1247,15 @@ void AProjectAbyssV2Character::StartProxBlock()
 {
 	if (canMove && comboState == EComboState::E_None)
 	{
-		characterState = ECharacterState::VE_Blocking;
+		if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
+		{
+			characterState = ECharacterState::VE_Blocking;
+		}
+		else
+		{
+			characterState = ECharacterState::VE_CrouchBlocking;
+		}
+		
 	}
 }
 
@@ -1216,8 +1263,16 @@ void AProjectAbyssV2Character::StopProxBlock()
 {
 	if (canMove && comboState == EComboState::E_None)
 	{
-		characterState = ECharacterState::VE_Default;
+		if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
+		{
+			characterState = ECharacterState::VE_Default;
+		}
+		else
+		{
+			characterState = ECharacterState::VE_Crouching;
+		}
 	}
+
 }
 
 void AProjectAbyssV2Character::RemovefromBuffer()
@@ -1289,7 +1344,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 	}
 	DetermineCommandToUse();
 	
-		if (characterState != ECharacterState::VE_Jumping && comboState != EComboState::E_WallBounce && canFlip)
+		if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_WallBounce && canFlip)
 		{
 			if (otherPlayer)
 			{
