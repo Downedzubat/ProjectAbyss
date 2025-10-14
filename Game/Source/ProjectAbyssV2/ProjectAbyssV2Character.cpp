@@ -54,6 +54,13 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	wasTerrorAtkUsed = false;
 	isFacingRight = false;
 	atkHit = false;
+
+	counterHit = false;
+	punishCounter = false;
+
+	shouldWallBounce = false;
+	shouldGroundBounce = false;
+	shouldHardKnockdown = false;
 	
 	jumpHeight = 1000.0f;
 	jumpDistance = 400.0f;
@@ -80,6 +87,8 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	gravityScale = GetCharacterMovement()->GravityScale;
 	canMove = true;
 	removeInputFromBufferTime = 1.0f;
+
+	comboCounter = 0;
 
 	curTick = 0;
 	currentInputsThisFrame = 0;
@@ -201,18 +210,29 @@ void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 				}
 	
 	}
-	else if ((comboState == EComboState::E_Launched) || comboState == EComboState::E_WallBounce || comboState == EComboState::E_FloorBounce)
+	else if ((comboState == EComboState::E_Launched && !shouldGroundBounce) || comboState == EComboState::E_WallBounce || comboState == EComboState::E_FloorBounce)
 	{
 		if (!Cast<AHitboxActor>(Hit.GetActor()))
 		{
 			GetCharacterMovement()->GravityScale = gravityScale;
-			characterState = ECharacterState::VE_Default;
+
+			if (!shouldHardKnockdown)
+			{
+				comboState = EComboState::E_Knockdown;
+			}
+			else
+			{
+				comboState = EComboState::E_HardKnockdown;
+				shouldHardKnockdown = false;
+			}
+			jumpCount = 0;
 		}
 	}
-	/*else if (shouldFloorBounce)
+	else if (shouldGroundBounce)
 	{
 		comboState = EComboState::E_FloorBounce;
-	}*/
+		jumpCount = 0;
+	}
 	jumpCount = 0;
 
 	IgnorePlayerToPlayerCollision(false);
@@ -270,6 +290,11 @@ void AProjectAbyssV2Character::BeginHitstop(float _damageAmount)
 
 	}
 
+}
+
+void AProjectAbyssV2Character::EndCombo()
+{
+	comboCounter = 0;
 }
 
 
@@ -855,20 +880,49 @@ void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 	}
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType, FVector _hitLocation)
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType, FVector _hitLocation, bool _shouldCauseHardKnockdown)
 {
 	bool isKOFromHit = false;
 	if (!((characterState == ECharacterState::VE_Blocking || characterState == ECharacterState::VE_CrouchBlocking && _hitType == EHitType::E_HIGH || _hitType == EHitType::E_OVERHEAD) ||
 		(characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_MID) ||
 		(characterState == ECharacterState::VE_CrouchBlocking && _hitType == EHitType::E_LOW)))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
-		playerHealth -= _damageAmount;
+		if (attackState == EAttackState::E_AttackStarted || attackState == EAttackState::E_AttackActive)
+		{
+			counterHit = true;
+			_hitstunFrames += 8;
+			playerHealth -= _damageAmount * 1.15;
+			UE_LOG(LogTemp, Warning, TEXT("We are countered for %f points"), _damageAmount);
+			counterHit = false;
+		}
+		else if (attackState == EAttackState::E_AttackRecovery)
+		{
+			punishCounter = true;
+			_hitstunFrames += 20;
+			playerHealth -= _damageAmount * 1.25;
+
+			UE_LOG(LogTemp, Warning, TEXT("We are punished for %f points"), _damageAmount);
+			
+			punishCounter = false;
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("We are taking damage for %f points"), _damageAmount);
+			playerHealth -= _damageAmount;
+		}
+		
 		if (playerHealth < 0.00f)
 		{
 			isKOFromHit = true;
 		}
+		
+		
+		if (stunFrames > 0 || otherPlayer->comboCounter == 0)
+		{
+			otherPlayer->comboCounter++;
+		}
 
+		shouldHardKnockdown = _shouldCauseHardKnockdown;
 		//Play VFX and SFX for damage taken
 		PlayDamageEffects(_hitLocation, isKOFromHit);
 		
@@ -944,6 +998,11 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			PerformKnockback(_knockbackAmount, _launchAmount, true);
 			BeginHitstop(_damageAmount);
 		 }
+		else
+		{
+			counterHit = false;
+			punishCounter = false;
+		}
 	}
 	
 
@@ -1020,6 +1079,8 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 	}
 }
 
+
+
 void AProjectAbyssV2Character::BeginStun()
 {
 	if (stunFrames > 0.0f)
@@ -1046,6 +1107,8 @@ void AProjectAbyssV2Character::EndStun()
 		}
 		
 		comboState = EComboState::E_None;
+
+		otherPlayer->EndCombo();
 
 	}
 	
@@ -1085,77 +1148,92 @@ void AProjectAbyssV2Character::AddtoBuffer(FInputInfo _inputInfo)
 }
 
 
-//probably the most fragile function in this entire game. I've handled it in a way which should make it stable
-//This checks the input buffer for commands, if it matches, the relevant attack is performed.
-//Deprecated as a more efficient method is now used
 
 
+//Check circular buffer for matching command types
+//if all conditions within the attack data are met, perform the attack.
 void AProjectAbyssV2Character::CheckBufferForCommandType(EInputStatus _inputStatus)
 {
 	int correctSequenceCounter = 0;
-	for (auto currentCommand : characterCommands)
+
+	//for (auto characterCommands[curCommand} : characterCommands)
+	for (int curCommand = 0; curCommand < characterCommands.Num(); ++curCommand)
 	{
-		correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
-
-		for (int frame = 0; frame < currentCommand.maxFramesBetweenInputs; ++frame)
+		if (terrorGauge >= characterCommands[curCommand].requiredMeter)
 		{
-			int frameDataToCheck = (curTick - frame + inputBuffer.Capacity()) % inputBuffer.Capacity();
+			correctSequenceCounter = characterCommands[curCommand].inputTypes.Num() - 1;
 
-
-			for (int i = 0; i < inputsPerFrame; ++i)
+			for (int frame = 0; frame < characterCommands[curCommand].maxFramesBetweenInputs; ++frame)
 			{
-				if (inputBuffer[frameDataToCheck].inputs[i].inputType != EInputType::E_None)
+				int frameDataToCheck = (curTick - frame + inputBuffer.Capacity()) % inputBuffer.Capacity();
+
+
+				for (int i = 0; i < inputsPerFrame; ++i)
 				{
-					EInputType type = inputBuffer[frameDataToCheck].inputs[i].inputType;
-					EInputStatus status = inputBuffer[frameDataToCheck].inputs[i].inputStatus;
-					int64 chargedFrames = inputBuffer[frameDataToCheck].inputs[i].chargedFrames;
-					
-					if (correctSequenceCounter > -1)
+					if (inputBuffer[frameDataToCheck].inputs[i].inputType != EInputType::E_None)
 					{
-						// Making this as robust as it now is was painful
-						if ((type == currentCommand.inputTypes[correctSequenceCounter].inputType || (MultiInputCommand(currentCommand, type) && status != EInputStatus::E_Release))
-							&& (status == currentCommand.inputTypes[correctSequenceCounter].inputStatus || (status == EInputStatus::E_Press && currentCommand.inputTypes[correctSequenceCounter].inputStatus == EInputStatus::E_Hold))
-							&& chargedFrames >= currentCommand.inputTypes[correctSequenceCounter].requiredChargeFrames)
+						EInputType type = inputBuffer[frameDataToCheck].inputs[i].inputType;
+						EInputStatus status = inputBuffer[frameDataToCheck].inputs[i].inputStatus;
+						int64 chargedFrames = inputBuffer[frameDataToCheck].inputs[i].chargedFrames;
+
+
+						//if a chargeable input gets released
+						if (type == characterCommands[curCommand].inputTypes[characterCommands[curCommand].inputTypes.Num() - 1].inputType
+							&& _inputStatus == EInputStatus::E_Release && characterCommands[curCommand].isCharging)
 						{
-							--correctSequenceCounter;
-							//inputBuffer[frameDataToCheck].wasUsed = true;
+							characterCommands[curCommand].isCharging = false;
+							characterCommands[curCommand].currHeldFrames = 0;
 						}
-						else if (type != EInputType::E_None && status != EInputStatus::E_Release)
+
+
+						if (correctSequenceCounter > -1)
 						{
-							correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+							// Making this as robust as it now is was painful
+							if ((type == characterCommands[curCommand].inputTypes[correctSequenceCounter].inputType || (MultiInputCommand(characterCommands[curCommand], type) && status != EInputStatus::E_Release))
+								&& (status == characterCommands[curCommand].inputTypes[correctSequenceCounter].inputStatus || (status == EInputStatus::E_Press && characterCommands[curCommand].inputTypes[correctSequenceCounter].inputStatus == EInputStatus::E_Hold))
+								&& chargedFrames >= characterCommands[curCommand].inputTypes[correctSequenceCounter].requiredChargeFrames)
+							{
+								--correctSequenceCounter;
+								//inputBuffer[frameDataToCheck].wasUsed = true;
+							}
+							else if (type != EInputType::E_None && status != EInputStatus::E_Release)
+							{
+								correctSequenceCounter = characterCommands[curCommand].inputTypes.Num() - 1;
+							}
+							else if (MultiInputCommand(characterCommands[curCommand], type) && status == EInputStatus::E_Release)
+							{
+								correctSequenceCounter = characterCommands[curCommand].inputTypes.Num() - 1;
+							}
 						}
-						else if (MultiInputCommand(currentCommand, type) && status == EInputStatus::E_Release)
+						if (correctSequenceCounter == -1 && _inputStatus != EInputStatus::E_Release)
 						{
-							correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
+							if (characterState == characterCommands[curCommand].requiredState)
+							{
+								moveBuffer.Add(characterCommands[curCommand]);
+								break;
+							}
+							else
+							{
+								correctSequenceCounter = characterCommands[curCommand].inputTypes.Num() - 1;
+							}
 						}
 					}
-					if (correctSequenceCounter == -1 && _inputStatus != EInputStatus::E_Release)
+					else
 					{
-						if (characterState == currentCommand.requiredState)
-						{
-							moveBuffer.Add(currentCommand);
-							break;
-						}
-						else
-						{
-							correctSequenceCounter = currentCommand.inputTypes.Num() - 1;
-						}
+						break;
 					}
+
 				}
-				else
+
+				//prevents commands repeating on release will change if we decide to use negative edge or have a character with a gimmick where a release input is required
+				if (correctSequenceCounter == -1 && _inputStatus != EInputStatus::E_Release)
 				{
+					moveBuffer.Add(characterCommands[curCommand]);
 					break;
 				}
-			
-			}
-			
-			//prevents commands repeating on release will change if we decide to use negative edge or have a character with a gimmick where a release input is required
-			if (correctSequenceCounter == -1 && _inputStatus != EInputStatus::E_Release)
-			{
-				moveBuffer.Add(currentCommand);
-				break;
 			}
 		}
+		
 	}
 }
 
@@ -1222,24 +1300,24 @@ void AProjectAbyssV2Character::StartCommand(FString _commandName)
 {
 	for (int currentCommand = 0; currentCommand < characterCommands.Num(); ++currentCommand)
 	{
-		if (canAttack)
+		if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
 		{
-			if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
+			if (canAttack)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *_commandName);
-				characterCommands[currentCommand].hasUsedCommand = true;
-			}
-			if (_commandName.Compare(characterCommands[currentCommand].name) == 2)
-			{
-				characterCommands[currentCommand].hasUsedSuper = true;
-			}
+				if (terrorGauge >= characterCommands[currentCommand].requiredMeter)
+				{
+					terrorGauge -= characterCommands[currentCommand].requiredMeter;
 
-			if (characterCommands[currentCommand].hasUsedSuper)
-			{
-				StartTerrorAttack();
+					if (!characterCommands[currentCommand].isCharging && characterCommands[currentCommand].maxHeldFrames > 0)
+					{
+						//Begin charging a "CHARGE OK" command
+						characterCommands[currentCommand].isCharging = true;
+					}
+					UE_LOG(LogTemp, Warning, TEXT("The character is using the command: %s."), *_commandName);
+					characterCommands[currentCommand].hasUsedCommand = true;
+				}
 			}
 		}
-
 	}
 }
 
@@ -1288,62 +1366,80 @@ void AProjectAbyssV2Character::RoundWon(AProjectAbyssV2Character* _winningCharac
 
 void AProjectAbyssV2Character::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
-	
-	//No input given this frame
-	if (!capturedInputThisFrame)
+	//Disable unneeded logic when character is frozen
+	if (CustomTimeDilation > 0.0f)
 	{
-		FInputInfo noneInput;
-		noneInput.inputType = EInputType::E_None;
-		noneInput.frame = GFrameCounter;
-		noneInput.chargedFrames = 0;
+		Super::Tick(DeltaTime);
 
-		for (int i = 0; i < inputsPerFrame; ++i)
+		for (int i = 0; i < characterCommands.Num(); ++i)
 		{
-			inputBuffer[curTick].inputs[i] = noneInput;
+			//if character is charging attack
+			if (characterCommands[i].isCharging)
+			{
+				if (characterCommands[i].maxHeldFrames > characterCommands[i].currHeldFrames)
+				{
+					++characterCommands[i].currHeldFrames;
+				}
+				else
+				{
+					//perform "release action
+					characterCommands[i].isCharging = false;
+					characterCommands[i].currHeldFrames = 0;
+				}
+			}
 		}
-		
-	}
-	else
-	{
-		//reset for next frame
-		capturedInputThisFrame = false;
-		currentInputsThisFrame = 0;
-	}
-
-
-	//update all charge values
-	for (int i = 0; i < chargeTimes.Num(); ++i)
-	{
-		if (chargeTimes[i].isHoldingInput)
+		//No input given this frame
+		if (!capturedInputThisFrame)
 		{
-			++chargeTimes[i].chargeFrames;
+			FInputInfo noneInput;
+			noneInput.inputType = EInputType::E_None;
+			noneInput.frame = GFrameCounter;
+			noneInput.chargedFrames = 0;
+
+			for (int i = 0; i < inputsPerFrame; ++i)
+			{
+				inputBuffer[curTick].inputs[i] = noneInput;
+			}
+
 		}
-	}
-	if (curTick < 59)
-	{
-		++curTick;
-	}
-	else
-	{
-		curTick = 0;
-	}
-
-	
-
-	//HitStun is now done in frames, not seconds
-	if (stunFrames > 0)
-	{
-		--stunFrames;
-
-		if (stunFrames <= 0)
+		else
 		{
-			EndStun();
+			//reset for next frame
+			capturedInputThisFrame = false;
+			currentInputsThisFrame = 0;
 		}
-	}
-	DetermineCommandToUse();
-	
+
+		//update all charge values
+		for (int i = 0; i < chargeTimes.Num(); ++i)
+		{
+			if (chargeTimes[i].isHoldingInput)
+			{
+				++chargeTimes[i].chargeFrames;
+			}
+		}
+		if (curTick < 59)
+		{
+			++curTick;
+		}
+		else
+		{
+			curTick = 0;
+		}
+
+
+
+		//HitStun is now done in frames, not seconds
+		if (stunFrames > 0)
+		{
+			--stunFrames;
+
+			if (stunFrames <= 0)
+			{
+				EndStun();
+			}
+		}
+		DetermineCommandToUse();
+
 		if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_WallBounce && canFlip)
 		{
 			if (otherPlayer)
@@ -1402,9 +1498,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 				}
 			}
 		}
-		
-		
-	
+	}	
 }
 
 void AProjectAbyssV2Character::WinRound() 

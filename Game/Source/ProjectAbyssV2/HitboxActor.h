@@ -61,10 +61,15 @@ public:
 	//Hitbox location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 	FTransform hitboxTransform;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-	bool shouldAttach;
+	bool shouldCauseHardKnockdown;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 	bool shouldCauseGroundBounce;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	bool shouldAttach;
 
 };
 
@@ -91,40 +96,45 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Hitbox")
 	FHitboxData hitboxData;
 
-	//Damage the hitbox will do
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		float hitboxDamage;
+	float hitboxDamage;
 
 	//Damage the hitbox will do
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		int hitstunFrames;
+	int hitstunFrames;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		float knockbackAmount;
+	float knockbackAmount;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		float launchDistance;
+	float launchDistance;
 
 	//Damage the hitbox will do
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		int blockStunFrames;
+	int blockStunFrames;
 
 	//Hitbox Enum instance
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		EHitboxEnum hitboxType;
+	EHitboxEnum hitboxType;
 
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		EHitType hitType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	EHitType hitType;
 
 	//Hitbox location
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		FVector hitboxLocation;
+	FTransform hitboxTransform;
 
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		bool shouldAttach;
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-		bool shouldCauseGroundBounce;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	bool shouldCauseHardKnockdown;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	bool shouldCauseGroundBounce;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	bool shouldAttach;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	FVector HitboxLocation;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

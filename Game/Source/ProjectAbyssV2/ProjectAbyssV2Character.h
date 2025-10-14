@@ -31,10 +31,12 @@ enum class EComboState : uint8
 	E_LowStunned  UMETA(DisplayName = "LOWHIT"),
 	E_HighStunned UMETA(DisplayName = "HIGHHIT"),
 	E_Knockdown   UMETA(DisplayName = "KNOCKDOWN"),
+	E_HardKnockdown UMETA(DisplayName = "HARD_KNOCKDOWN"),
 	E_Recovery    UMETA(DisplayName = "RECOVERY"),
 	E_FloorBounce UMETA(Displayname = "FLOOR_BOUNCE"),
 	E_WallBounce  UMETA(DisplayName = "WALL_BOUNCE"),
 	E_Launched    UMETA(DisplayName = "LAUNCHED")
+
 };
 
 UENUM(BlueprintType)
@@ -97,23 +99,35 @@ struct FCommand
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
 	FString name;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
 	TArray<FCommandInput> inputTypes;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
 	ECharacterState requiredState;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
+	float requiredMeter;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
 	int64 maxFramesBetweenInputs = 12;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
+	int64 maxHeldFrames;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
+	int64 currHeldFrames;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
+	bool isCharging;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
 		bool hasUsedCommand;
 	
 		//this is not in use, but removing it might cause issues currently
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move Data")
 		bool hasUsedSuper;
 };
 
@@ -281,6 +295,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attacks")
 	bool canAttack;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
+	int comboCounter;
 	//Player Normals
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Normals")
 	bool wasJabUsed;
@@ -396,6 +413,16 @@ public:
 	bool capturedInputThisFrame;
 	int currentInputsThisFrame;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool shouldHardKnockdown;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool shouldGroundBounce;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "State")
+	bool shouldWallBounce;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool isStuckInEnemy;
 	//values for charge moves
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FChargeInputs> chargeTimes;
@@ -414,8 +441,8 @@ public:
 
 	void BeginHitstop(float _damageAmount);
 
-	
-
+	//Called when combo ends
+	void EndCombo();
 
 
 	UFUNCTION(BlueprintCallable)
@@ -472,6 +499,8 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void PlayBlockEffects(FVector _hitLocation, bool _isFinishingBlow = false);
 
+	bool counterHit;
+	bool punishCounter;
 
 	//The round has been won by indicated character
 	UFUNCTION(BlueprintCallable)
@@ -481,7 +510,7 @@ public:
 	void TriggerRoundWinEffects(AProjectAbyssV2Character* _winningCharacter = nullptr);
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _HitType, FVector _hitLocation);
+	void TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _HitType, FVector _hitLocation, bool _shouldCauseHardKnockdown = false);
 
 	void PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked);
 
