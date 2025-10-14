@@ -9,11 +9,11 @@ AHitboxActor::AHitboxActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	hitboxDamage = 0.0f;
-	hitstunFrames = 0;
-	blockStunFrames = 0;
-	knockbackAmount = 0.0f;
-	launchDistance = 0.0f;
+	//hitboxDamage = 0.0f;
+	//hitstunFrames = 0;
+	//blockStunFrames = 0;
+	//knockbackAmount = 0.0f;
+	//launchDistance = 0.0f;
 }
 
 // Called when the game starts or when spawned
