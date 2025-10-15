@@ -887,7 +887,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 		(characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_MID) ||
 		(characterState == ECharacterState::VE_CrouchBlocking && _hitType == EHitType::E_LOW)))
 	{
-		if (attackState == EAttackState::E_AttackStarted || attackState == EAttackState::E_AttackActive)
+		if (comboState == EComboState::E_None && attackState == EAttackState::E_AttackStarted || attackState == EAttackState::E_AttackActive )
 		{
 			counterHit = true;
 			_hitstunFrames += 8;
@@ -895,7 +895,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			UE_LOG(LogTemp, Warning, TEXT("We are countered for %f points"), _damageAmount);
 			counterHit = false;
 		}
-		else if (attackState == EAttackState::E_AttackRecovery)
+		else if (comboState == EComboState::E_None && attackState == EAttackState::E_AttackRecovery)
 		{
 			punishCounter = true;
 			_hitstunFrames += 20;
