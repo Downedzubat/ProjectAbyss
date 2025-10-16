@@ -8,6 +8,20 @@
 #include "ProjectAbyssV2GameMode.generated.h"
 
 
+UENUM(BlueprintType)
+enum class EMatchState : uint8
+{
+	E_Default	UMETA(DisplayName = "NO_STATE"),
+	E_CharacterIntro UMETA(DisplayName = "CHARACTER_INTRO"),
+	E_MatchBegin	UMETA(DisplayName = "MATCH_BEGIN"),
+	E_MatchActive	UMETA(DisplayName = "MATCH_ACTIVE"),
+	E_RoundOver		UMETA(DisplayName = "ROUND_OVER"),
+	E_MatchOver		UMETA(DisplayName = "MATCH_OVER"),
+	E_CharacterLoss	UMETA(DisplayName = "CHARACTER_LOSS"),
+	E_CharacterWin	UMETA(DisplayName = "CHARACTER_WIN"),
+	E_MatchResults	UMETA(DisplayName = "MATCH_RESULTS")
+};
+
 
 UCLASS(minimalapi)
 class AProjectAbyssV2GameMode : public AGameModeBase
@@ -27,11 +41,21 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void TriggerMatchWinEffects(AProjectAbyssV2Character* _winningCharacter = nullptr);
 
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void SkipCharacterIntro();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void PauseGame();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 	AProjectAbyssV2Character* player1;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
 	AProjectAbyssV2Character* player2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Match State")
+	EMatchState matchState;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gamemode Settings")
 	float roundTime;

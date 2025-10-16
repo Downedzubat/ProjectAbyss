@@ -55,7 +55,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void CallStartRoundhouse();
 	UFUNCTION(BlueprintCallable)
-	void CallPerformStartInputLogic();
+	void PerformStartInputLogic();
 	UFUNCTION(BlueprintCallable)
 	void CallStartTerrorAttack();
 	

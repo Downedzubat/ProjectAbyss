@@ -138,8 +138,19 @@ void APAController::CallStartRoundhouse()
 	}
 }
 
-void APAController::CallPerformStartInputLogic()
+void APAController::PerformStartInputLogic()
 {
+	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
+	{
+		if (gameMode->matchState == EMatchState::E_CharacterIntro)
+		{
+			gameMode->SkipCharacterIntro();
+		}
+		else
+		{
+			gameMode->PauseGame();
+		}
+	}
 }
 
 void APAController::CallStartTerrorAttack()
