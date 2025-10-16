@@ -6,7 +6,7 @@
 
 AProjectAbyssV2GameMode::AProjectAbyssV2GameMode()
 {
-
+	matchState = EMatchState::E_Default;
 	numRounds = 3;
 	roundTime = 99;
 	isTimerActive = false;
