@@ -295,6 +295,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attacks")
 	bool canAttack;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
+	bool isPlayerOne;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combo")
 	int comboCounter;

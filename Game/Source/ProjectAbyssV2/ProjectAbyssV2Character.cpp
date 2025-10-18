@@ -107,19 +107,17 @@ void AProjectAbyssV2Character::SetupPlayerInputComponent(class UInputComponent* 
 {
 	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		//if (gameMode->player1 == this)
-		//{
-//PlayerInputComponent->BindAxis("MoveRightP1", this, &AProjectAbyssV2Character::MoveRight);
-		//}
-		//else
-		//{
-//PlayerInputComponent->BindAxis("MoveRightP2", this, &AProjectAbyssV2Character::MoveRight);
-		//}
+
+		
+			if (gameMode->player1 == this)
+			{
+				isPlayerOne = true;
+			}
+			else {
+				isPlayerOne = false;
+			}
 
 		NotifyPlayerLockedIn();
-
-		//E_LOG(LogTemp, Warning, TEXT("Player 1 has bound their controls"));
-
 	}
 }
 
@@ -407,11 +405,11 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
 				}
 			}
 		}
@@ -423,12 +421,12 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 
 				if (isFacingRight)
 				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
 
 				}
 				else
 				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
 				}
 			}
 		}
@@ -446,7 +444,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 						
 						hasReleasedRightAxisInput = false;
 
-						if (!isFacingRight)
+						if (isFacingRight)
 						{
 							characterState = ECharacterState::VE_MovingBackward;
 							isPressingBackward = true;
@@ -460,7 +458,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 					{
 						
 						hasReleasedLeftAxisInput = false;
-						if (isFacingRight)
+						if (!isFacingRight)
 						{
 							characterState = ECharacterState::VE_MovingBackward;
 							isPressingBackward = true;
@@ -532,6 +530,7 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 		}
 	}
 
+	
 	
 }
 	
@@ -1021,14 +1020,17 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 		playerHealth = 0.00f;
 		
 	}
+	// if this character is KO'd
+
 	if (isKOFromHit)
 	{
 		if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
 		{
 			gameMode->isTimerActive = false;
+			gameMode->RoundWin(otherPlayer);
 		}
 		playerHealth = 0.00f;
-		otherPlayer->WinRound();
+	
 		NotifyKO();
 	}
 }
@@ -1507,17 +1509,7 @@ void AProjectAbyssV2Character::WinRound()
 	{
 		otherPlayer->hasLostRound = true;
 		++roundsWon;
-
-		if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
-		{
-			if (roundsWon == gameMode->numRounds)
-			{
-				gameMode->MatchWon(this);
-			}
-		}
 	}
-	NotifyRoundEnd();
-	UpdateHUDRoundIcons();
 }
 void AProjectAbyssV2Character::WinMatch()
 {
