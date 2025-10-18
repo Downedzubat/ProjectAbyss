@@ -142,7 +142,7 @@ void APAController::PerformStartInputLogic()
 {
 	if (auto gameMode = Cast<AProjectAbyssV2GameMode>(GetWorld()->GetAuthGameMode()))
 	{
-		if (gameMode->matchState == EMatchState::E_CharacterIntro)
+		if (gameMode->matchState == EMatchState::E_Character1Intro || gameMode->matchState == EMatchState::E_Character2Intro)
 		{
 			gameMode->SkipCharacterIntro();
 		}

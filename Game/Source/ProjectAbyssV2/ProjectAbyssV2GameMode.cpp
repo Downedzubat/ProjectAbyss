@@ -38,9 +38,33 @@ void AProjectAbyssV2GameMode::Tick(float DeltaTime)
 	}
 }
 
+
+
+void AProjectAbyssV2GameMode::RoundWin(AProjectAbyssV2Character* _winningCharacter)
+{
+	if (_winningCharacter)
+	{
+		_winningCharacter->WinRound();
+
+		if (_winningCharacter->roundsWon == numRounds)
+		{
+			MatchWon(_winningCharacter);
+		}
+
+		_winningCharacter->NotifyRoundEnd();
+		_winningCharacter->UpdateHUDRoundIcons();
+	}
+}
+
 void AProjectAbyssV2GameMode::MatchWon(AProjectAbyssV2Character* _winningCharacter)
 {
-	TriggerMatchWinEffects(_winningCharacter);
+	if (_winningCharacter)
+	{
+		TriggerMatchWinEffects(_winningCharacter);
+	}
+
+	matchState = EMatchState::E_MatchOver;
+	
 }
 
 

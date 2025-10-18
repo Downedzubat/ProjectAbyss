@@ -12,7 +12,8 @@ UENUM(BlueprintType)
 enum class EMatchState : uint8
 {
 	E_Default	UMETA(DisplayName = "NO_STATE"),
-	E_CharacterIntro UMETA(DisplayName = "CHARACTER_INTRO"),
+	E_Character1Intro UMETA(DisplayName = "CHARACTER1_INTRO"),
+	E_Character2Intro UMETA(DisplayName = "CHARACTER2_INTRO"),
 	E_MatchBegin	UMETA(DisplayName = "MATCH_BEGIN"),
 	E_MatchActive	UMETA(DisplayName = "MATCH_ACTIVE"),
 	E_RoundOver		UMETA(DisplayName = "ROUND_OVER"),
@@ -36,8 +37,14 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void BPTick(float DeltaTime);
 
+
+	UFUNCTION(BlueprintCallable)
+	void RoundWin(AProjectAbyssV2Character* _winningCharacter = nullptr);
+
 	UFUNCTION(BlueprintCallable)
 	void MatchWon(AProjectAbyssV2Character* _winningCharacter = nullptr);
+	
+	
 	UFUNCTION(BlueprintImplementableEvent)
 	void TriggerMatchWinEffects(AProjectAbyssV2Character* _winningCharacter = nullptr);
 
