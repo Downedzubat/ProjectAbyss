@@ -10,11 +10,11 @@
 UENUM(BlueprintType)
 enum class EHitboxEnum : uint8
 {
-	HB_PROXIMITY	UMETA(DisplayName = "Proximity"),
-	HB_STRIKE		UMETA(DisplayName = "Strike"),
+	HB_PROXIMITY		UMETA(DisplayName = "Proximity"),
+	HB_STRIKE			UMETA(DisplayName = "Strike"),
 	HB_PROJECTILE		UMETA(DisplayName = "Projectile"),
-	HB_THROW        UMETA(DisplayName = "Throw"),
-	HB_HURTBOX		UMETA(DisplayName = "Hurtbox")
+	HB_THROW			UMETA(DisplayName = "Throw"),
+	HB_HURTBOX			UMETA(DisplayName = "Hurtbox")
 };
 
 //Used to specify if a hitbox can essentially void certain guard types, for example, low beats standing block
