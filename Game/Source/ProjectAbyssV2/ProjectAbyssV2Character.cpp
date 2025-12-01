@@ -1491,7 +1491,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 						transform = characterMesh->GetRelativeTransform();
 						scale = transform.GetScale3D();
 						scale.Y = 1.0f;
-						scale.X = 1.0f;
+						scale.X = -1.0f;
 						transform.SetScale3D(scale);
 
 						characterMesh->SetRelativeTransform(transform);

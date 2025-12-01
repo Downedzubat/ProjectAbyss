@@ -393,6 +393,10 @@ public:
 		bool isFacingRight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combos")
 		bool atkHit;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Throws")
+	bool hasLandedThrow;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Throws")
+	bool wasThrown;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
 		bool hasReleasedRightAxisInput;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input Stack")
