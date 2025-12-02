@@ -178,13 +178,9 @@ void AProjectAbyssV2Character::StopJumping()
 
 void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 {
-
 	GetMovementComponent()->StopMovementImmediately();
 	if (characterState == ECharacterState::VE_NeutralJumping || characterState == ECharacterState::VE_ForwardJumping || characterState == ECharacterState::VE_BackwardJumping)
 	{
-
-			
-			
 				if (otherPlayer && Hit.GetActor() == otherPlayer)
 				{
 					if (otherPlayer->isFacingRight)
@@ -198,13 +194,10 @@ void AProjectAbyssV2Character::Landed(const FHitResult& Hit)
 
 					GetCharacterMovement()->GravityScale = gravityScale;
 				}
-				
-				
-			
 				else if (!Cast<AHitboxActor>(Hit.GetActor()))
 				{
-				GetCharacterMovement()->GravityScale = gravityScale;
-				characterState = ECharacterState::VE_Default;
+					GetCharacterMovement()->GravityScale = gravityScale;
+					characterState = ECharacterState::VE_Default;
 				}
 	
 	}
@@ -500,33 +493,10 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 					isPressingBackward = false;
 				}
 			}
-			if (otherPlayer) 
-			{
-				float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
-
-				if (currentDistanceApart >= maxDistanceApart)
-				{
-					if ((currentDistanceApart + Value < currentDistanceApart && isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && !isFacingRight))
-					{
-						// add movement in that direction
-						if (canMove) 
-						{
-							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-						}
-
-					}
-				}
-				else
-				{
-					if (canMove)
-					{
-						// add movement in that direction
-						AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-					}
-
-				}
-				
+			if (canMove) {
+				AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
 			}
+			
 		}
 	}
 
@@ -1014,7 +984,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 	//{
 	//	comboState = EComboState::E_Launched;
 	//}
-	PerformKnockback(_knockbackAmount,  0.0f, false);
+	//PerformKnockback(_knockbackAmount,  0.0f, false);
 	if (playerHealth < 0.00f)
 	{
 		playerHealth = 0.00f;
@@ -1041,37 +1011,40 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 	{
 		if (!isFacingRight)
 		{
-			CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
+			CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false, false);
 		}
 		else
 		{
-			CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), false, false);
+			CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), false, false, false);
 		}
 	}
 	else
 	{
 		if (_launchAmount > 0.0f)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("We are being launched for %f"), _launchAmount);
 			comboState = EComboState::E_Launched;
 			GetCharacterMovement()->GravityScale *= 0.7;
 			if (!isFacingRight)
 			{
-				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), false, false);
+				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount, _launchAmount), true, true, false);
 			}
 			else
 			{
-				CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), false, false);
+				CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount, _launchAmount), true, true, false);
 			}
 
 		}
-		else {
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("We are not being launched"));
 			if (!isFacingRight)
 			{
-				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), false, false);
+				CustomLaunchCharacter(FVector(0.0f, _knockbackAmount * 2.0f, 0.0f), true, false, false);
 			}
 			else
 			{
-				CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), false, false);
+				CustomLaunchCharacter(FVector(0.0f, -_knockbackAmount * 2.0f, 0.0f), true, false, false);
 			}
 		}
 	
@@ -1527,54 +1500,3 @@ void AProjectAbyssV2Character::DoubleKO()
 		NotifyDoubleKO();
 		UpdateHUDRoundIcons();
 }
-
-
-
-	//if (characterState != ECharacterState::VE_Jumping) {
-
-
-		//if (otherPlayer)
-	//	{
-	//		if (auto characterMovement = GetCharacterMovement())
-	//		{
-		//		if (auto enemyMovement = otherPlayer->GetCharacterMovement())
-			//	{
-				//	if (enemyMovement->GetActorLocation().Y >= characterMovement->GetActorLocation().Y)
-					//{
-						//// the following code should 110% be using scale.Y, but for some reason with Mask, it has to be scale.Z I'll note this down and look into a fix -FIXED
-						//Now when Mask is flipped she is disjointed from hurtbox, I think the best solution is going to be to make our own idle anim using cascadeur
-						//if (isFacingRight)
-					//	{
-						//	if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
-						//	{
-//
-	//							transform = mesh->GetRelativeTransform();
-		//						scale = transform.GetScale3D();
-			//					scale.Y = -1;
-				//				transform.SetScale3D(scale);
-//								mesh->SetRelativeTransform(transform);
-	//
-		//					}
-			//				isFacingRight = false;
-		//				}
-				//	}
-			//		else
-	//				{
-					//	if (isFacingRight)
-		//					if (auto mesh = GetCapsuleComponent()->GetChildComponent(1))
-						//	{
-				//			//
-					//			transform = mesh->GetRelativeTransform();
-					//			scale = transform.GetScale3D();
-				//				scale.Y = 1;
-					//			transform.SetScale3D(scale);
-				//				mesh->SetRelativeTransform(transform);
-
-//							}
-	//					isFacingRight = true;
-			//		}
-				//}
-			//}
-		//}
-//	}
-//} 
