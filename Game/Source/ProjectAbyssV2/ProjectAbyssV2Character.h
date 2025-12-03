@@ -516,7 +516,7 @@ public:
 	void TriggerRoundWinEffects(AProjectAbyssV2Character* _winningCharacter = nullptr);
 	//damage the player
 	UFUNCTION(BlueprintCallable)
-	void TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _HitType, FVector _hitLocation, bool _shouldCauseHardKnockdown = false);
+	void TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _HitType, FVector _hitLocation, bool _shouldWallBounce = false, bool _shouldGroundBounce = false, bool _shouldCauseHardKnockdown = false);
 
 	void PerformKnockback(float _knockbackAmount, float _launchAmount, bool _hasBlocked);
 

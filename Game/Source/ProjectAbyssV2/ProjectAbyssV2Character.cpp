@@ -849,8 +849,12 @@ void AProjectAbyssV2Character::CollidedWithProximityHitbox()
 	}
 }
 
-void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType, FVector _hitLocation, bool _shouldCauseHardKnockdown)
+void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrames, int _blockstunFrames, float _launchAmount, float _knockbackAmount, EHitType _hitType, FVector _hitLocation, bool _shouldWallBounce, bool _shouldGroundBounce, bool _shouldCauseHardKnockdown)
 {
+
+	shouldWallBounce = _shouldWallBounce;
+	shouldGroundBounce = _shouldGroundBounce;
+	shouldHardKnockdown = _shouldCauseHardKnockdown;
 	bool isKOFromHit = false;
 	if (!((characterState == ECharacterState::VE_Blocking || characterState == ECharacterState::VE_CrouchBlocking && _hitType == EHitType::E_HIGH || _hitType == EHitType::E_OVERHEAD) ||
 		(characterState == ECharacterState::VE_Blocking && _hitType == EHitType::E_MID) ||
@@ -891,7 +895,6 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			otherPlayer->comboCounter++;
 		}
 
-		shouldHardKnockdown = _shouldCauseHardKnockdown;
 		//Play VFX and SFX for damage taken
 		PlayDamageEffects(_hitLocation, isKOFromHit);
 		

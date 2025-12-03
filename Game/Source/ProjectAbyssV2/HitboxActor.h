@@ -63,10 +63,13 @@ public:
 	FTransform hitboxTransform;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-	bool shouldCauseHardKnockdown;
+	bool shouldCauseGroundBounce;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-	bool shouldCauseGroundBounce;
+	bool shouldHardKnockdown;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
+	bool shouldCauseWallBounce;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 	bool shouldAttach;
@@ -128,7 +131,7 @@ public:
 	bool shouldCauseHardKnockdown;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
-	bool shouldCauseGroundBounce;
+	bool shouldCauseWallBounce;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Hitbox")
 	bool shouldAttach;
