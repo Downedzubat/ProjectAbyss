@@ -10,6 +10,7 @@ AProjectAbyssV2GameMode::AProjectAbyssV2GameMode()
 	numRounds = 3;
 	roundTime = 99;
 	isTimerActive = false;
+	shouldSkipAllCharacterEntrances = false;
 
 	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/SideScrollerCPP/Blueprints/SideScrollerCharacter"));
@@ -25,6 +26,7 @@ void AProjectAbyssV2GameMode::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	//call BP tick function
 	BPTick(DeltaTime);
+
 
 	if (hitstopFrames > 0)
 	{

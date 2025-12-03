@@ -1417,7 +1417,7 @@ void AProjectAbyssV2Character::Tick(float DeltaTime)
 			}
 		}
 		DetermineCommandToUse();
-
+		
 		if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_WallBounce && canFlip)
 		{
 			if (otherPlayer)

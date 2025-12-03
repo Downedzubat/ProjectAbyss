@@ -50,9 +50,6 @@ public:
 
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void SkipCharacterIntro();
-
-	UFUNCTION(BlueprintImplementableEvent)
 	void PauseGame();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player References")
@@ -75,6 +72,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	int hitstopFrames;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameMode Settings")
+	bool shouldSkipAllCharacterEntrances;
 
 };
 

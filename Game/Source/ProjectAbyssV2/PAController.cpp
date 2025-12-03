@@ -45,6 +45,7 @@ void APAController::SetupInputComponent()
 	InputComponent->BindAction("P1Short", IE_Pressed, this, &APAController::CallStartShort);
 	InputComponent->BindAction("P1Long", IE_Pressed, this, &APAController::CallStartLong);
 	InputComponent->BindAction("P1Roundhouse", IE_Pressed, this, &APAController::CallStartRoundhouse);
+	InputComponent->BindAction("Start", IE_Pressed, this, &APAController::PerformStartInputLogic);
 	InputComponent->BindAction("DebugSuper", IE_Pressed, this, &APAController::CallStartTerrorAttack);
 }
 
@@ -144,7 +145,19 @@ void APAController::PerformStartInputLogic()
 	{
 		if (gameMode->matchState == EMatchState::E_Character1Intro || gameMode->matchState == EMatchState::E_Character2Intro)
 		{
-			gameMode->SkipCharacterIntro();
+			if (gameMode->shouldSkipAllCharacterEntrances)
+			{
+				gameMode->matchState = EMatchState::E_MatchBegin;
+			}
+			else
+			{
+				if (gameMode->matchState == EMatchState::E_Character1Intro) {
+					gameMode->matchState = EMatchState::E_Character2Intro;
+				}
+				else if (gameMode->matchState == EMatchState::E_Character2Intro) {
+					gameMode->matchState = EMatchState::E_MatchBegin;
+				}
+			}
 		}
 		else
 		{
