@@ -24,6 +24,7 @@ enum class EMusicType : uint8
 	E_Default			UMETA(DisplayName = "DEFAULT"),
 	E_Menu				UMETA(DisplayName = "MAIN_MENU"),
 	E_CharacterSelect	UMETA(DisplayName = "CHARACTER_SELECT"),
+	E_Options			UMETA(DisplayName = "OPTIONS_SCREEN"),
 	E_LevelTheme		UMETA(DisplayName = "STAGE_THEME"),
 	E_CharacterTheme	UMETA(DisplayName = "CHARA_THEME")
 };
