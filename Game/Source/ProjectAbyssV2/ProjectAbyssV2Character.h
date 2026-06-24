@@ -433,6 +433,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
 	TArray<FChargeInputs> chargeTimes;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FrameData")
+	float lastDamageRecieved;
 	// FUNCTIONS
 	
 	UFUNCTION(BlueprintCallable)

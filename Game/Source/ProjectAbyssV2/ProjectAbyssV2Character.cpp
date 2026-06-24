@@ -922,6 +922,7 @@ void AProjectAbyssV2Character::TakeDamage(float _damageAmount, int _hitstunFrame
 			PerformKnockback(_knockbackAmount, _launchAmount, false);
 			BeginStun();
 			BeginHitstop(_damageAmount);
+			lastDamageRecieved = _damageAmount * 100;
 		}
 		
 		
