@@ -94,6 +94,15 @@ AProjectAbyssV2Character::AProjectAbyssV2Character()
 	currentInputsThisFrame = 0;
 	capturedInputThisFrame = false;
 
+
+	//frame data
+	lastDamageRecieved = 0;
+	startATKFrame = 0;
+	firstACTframe = 0;
+	firstRECFrame = 0;
+	endATKFrame = 0;
+
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
@@ -1062,7 +1071,7 @@ void AProjectAbyssV2Character::PerformKnockback(float _knockbackAmount, float _l
 
 void AProjectAbyssV2Character::BeginStun()
 {
-	if (stunFrames > 0.0f)
+	if (stunFrames > 0)
 	{
 		canMove = false;
 	}
@@ -1277,6 +1286,7 @@ void AProjectAbyssV2Character::DetermineCommandToUse()
 
 void AProjectAbyssV2Character::StartCommand(FString _commandName)
 {
+	frameAdv = 0;
 	for (int currentCommand = 0; currentCommand < characterCommands.Num(); ++currentCommand)
 	{
 		if (_commandName.Compare(characterCommands[currentCommand].name) == 0)
@@ -1300,6 +1310,13 @@ void AProjectAbyssV2Character::StartCommand(FString _commandName)
 	}
 }
 
+
+
+void AProjectAbyssV2Character::GatherFrameData() {
+	lastStartupFrames = firstACTframe - startATKFrame;
+	lastActiveFrames = firstRECFrame - firstACTframe;
+	lastRecoveryFrames = endATKFrame - firstRECFrame;
+}
 void AProjectAbyssV2Character::StartProxBlock()
 {
 	if (canMove && comboState == EComboState::E_None)

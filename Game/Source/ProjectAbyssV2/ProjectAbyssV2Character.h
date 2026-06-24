@@ -434,8 +434,29 @@ public:
 	TArray<FChargeInputs> chargeTimes;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "FrameData")
+
+	//FRAME DATA
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int64 startATKFrame;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int64 firstACTframe;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int64 firstRECFrame;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int64 endATKFrame;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
 	float lastDamageRecieved;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int lastStartupFrames;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int lastActiveFrames;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int lastRecoveryFrames;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data")
+	int lastHitstunFrames;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Frame Data");
+	int frameAdv;
 	// FUNCTIONS
 	
 	UFUNCTION(BlueprintCallable)
@@ -487,6 +508,7 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
 	void NotifyPlayerLockedIn();
+
 
 	//Timer for handling stuns
 	FTimerHandle stunTimerHandle;
@@ -554,6 +576,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void StopProxBlock();
+
+	UFUNCTION(BlueprintCallable)
+	void GatherFrameData();
 
 	//----------------------------------------------------------------------------------------------------------------------------------------------------------
 public:
