@@ -5,6 +5,7 @@
 
 APAController::APAController()
 {
+
 }
 
 void APAController::BeginPlay()
@@ -13,7 +14,10 @@ void APAController::BeginPlay()
 
 	//retrieve character which is being possessed by this controller
 	possessedPawn = Cast<AProjectAbyssV2Character>(GetPawn());
+	isInputDeviceGamepad = false;
 }
+
+
 
 void APAController::SetupInputComponent()
 {
@@ -47,13 +51,20 @@ void APAController::SetupInputComponent()
 	InputComponent->BindAction("P1Roundhouse", IE_Pressed, this, &APAController::CallStartRoundhouse);
 	InputComponent->BindAction("Start", IE_Pressed, this, &APAController::PerformStartInputLogic);
 	InputComponent->BindAction("DebugSuper", IE_Pressed, this, &APAController::CallStartTerrorAttack);
+	InputComponent->BindAction("Start", IE_Pressed, this, &APAController::DetermineInputDeviceDetails);
+
+	for (int i = 0; i < InputComponent->GetNumActionBindings(); ++i) {
+		InputComponent->GetActionBinding(i).bConsumeInput = false;
+	}
+	
 }
+
 
 
 
 void APAController::CallMoveRight(float _value)
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->MoveRight(_value);
 	}
@@ -61,7 +72,7 @@ void APAController::CallMoveRight(float _value)
 
 void APAController::CallJump()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->Jump();
 	}
@@ -69,7 +80,7 @@ void APAController::CallJump()
 
 void APAController::CallStopJumping()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StopJumping();
 	}
@@ -77,7 +88,7 @@ void APAController::CallStopJumping()
 
 void APAController::CallStartCrouching()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartCrouching();
 	}
@@ -85,7 +96,7 @@ void APAController::CallStartCrouching()
 
 void APAController::CallStopCrouching()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StopCrouching();
 	}
@@ -93,7 +104,7 @@ void APAController::CallStopCrouching()
 
 void APAController::CallStartJab()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartJab();
 	}
@@ -101,7 +112,7 @@ void APAController::CallStartJab()
 
 void APAController::CallStartStrong()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartStrong();
 	}
@@ -109,7 +120,7 @@ void APAController::CallStartStrong()
 
 void APAController::CallStartFierce()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartFierce();
 	}
@@ -117,7 +128,7 @@ void APAController::CallStartFierce()
 
 void APAController::CallStartShort()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartShort();
 	}
@@ -125,7 +136,7 @@ void APAController::CallStartShort()
 
 void APAController::CallStartLong()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartLong();
 	}
@@ -133,7 +144,7 @@ void APAController::CallStartLong()
 
 void APAController::CallStartRoundhouse()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartRoundhouse();
 	}
@@ -168,9 +179,24 @@ void APAController::PerformStartInputLogic()
 
 void APAController::CallStartTerrorAttack()
 {
-	if (possessedPawn)
+	if (IsValid(possessedPawn))
 	{
 		possessedPawn->StartTerrorAttack();
+	}
+}
+
+void APAController::ClearCharacter()
+{
+	possessedPawn = nullptr;
+}
+
+void APAController::DetermineInputDeviceDetails(FKey _keyPressed)
+{
+	if (_keyPressed.IsGamepadKey()) {
+		isInputDeviceGamepad = true;
+	}
+	else {
+		isInputDeviceGamepad = false;
 	}
 }
 
@@ -178,7 +204,7 @@ void APAController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (!possessedPawn)
+	if (!IsValid (possessedPawn))
 	{
 		possessedPawn = Cast<AProjectAbyssV2Character>(GetPawn());
 	}

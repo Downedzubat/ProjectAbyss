@@ -2,6 +2,7 @@
 
 #include "ProjectAbyssV2Character.h"
 #include "ProjectAbyssV2GameMode.h"
+#include "PAController.h"
 #include "Camera/CameraComponent.h"
 #include "MainMenu.h"
 #include "Components/CapsuleComponent.h"
@@ -331,184 +332,193 @@ void AProjectAbyssV2Character::StopCrouching()
 
 void AProjectAbyssV2Character::MoveRight(float Value)
 {
+	
 	//OH GOD
 	//Best hope you have an evening free enjoying how I came to this solution
-	if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
-	{
-		if (Value > 0.01f)
-		{
-			if (!hasReleasedLeftAxisInput)
-			{
-				hasReleasedLeftAxisInput = true;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
-				}
-			}
-
-			if (hasReleasedRightAxisInput)
-			{
-				hasReleasedRightAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-				}
-			}
-
-		}
-		else if (Value < -0.01f)
-		{
-			if (!hasReleasedRightAxisInput)
-			{
-				hasReleasedRightAxisInput = true;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
-				}
-			}
-
-			if (hasReleasedLeftAxisInput)
-			{
-				hasReleasedLeftAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-				}
-			}
-		}
-	}
-	else
-	{
-		if (Value > 0.01f)
-		{
-			if (hasReleasedRightAxisInput)
-			{
-				hasReleasedRightAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-				}
-			}
-		}
-		else if (Value < -0.01f)
-		{
-			if (hasReleasedLeftAxisInput)
-			{
-				hasReleasedLeftAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-				}
-			}
-		}
-	}
-	if (auto MainMenu = Cast<UMainMenu>(GetGameInstance())) 
-	{
-		if (MainMenu->isDeviceForMultiplePlayers)
-		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking && comboState == EComboState::E_None)
-			{
-				if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_Launched)
+	if (auto baseGameInstance = Cast<UMainMenu>(GetGameInstance())) {
+		if (auto controller = Cast<APAController>(GetController())) {
+			if (!controller->isInputDeviceGamepad) {
+				if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
 				{
 					if (Value > 0.01f)
 					{
-						
-						hasReleasedRightAxisInput = false;
+						if (!hasReleasedLeftAxisInput)
+						{
+							hasReleasedLeftAxisInput = true;
 
-						if (isFacingRight)
-						{
-							characterState = ECharacterState::VE_MovingBackward;
-							isPressingBackward = true;
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+							}
 						}
-						else
+
+						if (hasReleasedRightAxisInput)
 						{
-							characterState = ECharacterState::VE_MovingForward;
+							hasReleasedRightAxisInput = false;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+							}
+						}
+
+					}
+					else if (Value < -0.01f)
+					{
+						if (!hasReleasedRightAxisInput)
+						{
+							hasReleasedRightAxisInput = true;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+							}
+						}
+
+						if (hasReleasedLeftAxisInput)
+						{
+							hasReleasedLeftAxisInput = false;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+							}
+						}
+					}
+				}
+				else
+				{
+					if (Value > 0.01f)
+					{
+						if (hasReleasedRightAxisInput)
+						{
+							hasReleasedRightAxisInput = false;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+							}
 						}
 					}
 					else if (Value < -0.01f)
 					{
-						
-						hasReleasedLeftAxisInput = false;
-						if (!isFacingRight)
+						if (hasReleasedLeftAxisInput)
 						{
-							characterState = ECharacterState::VE_MovingBackward;
-							isPressingBackward = true;
-						}
-						else {
-							characterState = ECharacterState::VE_MovingForward;
-						}
-					}
-					else
-					{
-						characterState = ECharacterState::VE_Default;
-						//hasReleasedRightAxisInput = true;
-						isPressingBackward = false;
-					}
-				}
-			}
-			else if (canMove && (characterState == ECharacterState::VE_Crouching || characterState == ECharacterState::VE_CrouchBlocking))
-			{
-				if (Value > 0.01f)
-				{
-					hasReleasedRightAxisInput = false;
-					if (!isFacingRight)
-					{
-						isPressingBackward = true;
-					}
-				}
-				else if (Value < -0.01f)
-				{
-					hasReleasedLeftAxisInput = false;
+							hasReleasedLeftAxisInput = false;
 
-					if (isFacingRight)
-					{
-						isPressingBackward = true;
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+							}
+						}
 					}
 				}
-				else
+				if (auto MainMenu = Cast<UMainMenu>(GetGameInstance()))
 				{
-					//hasReleasedAxisInput = true;
-					isPressingBackward = false;
+					if (MainMenu->isDeviceForMultiplePlayers)
+					{
+						if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking && comboState == EComboState::E_None)
+						{
+							if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_Launched)
+							{
+								if (Value > 0.01f)
+								{
+
+									hasReleasedRightAxisInput = false;
+
+									if (isFacingRight)
+									{
+										characterState = ECharacterState::VE_MovingBackward;
+										isPressingBackward = true;
+									}
+									else
+									{
+										characterState = ECharacterState::VE_MovingForward;
+									}
+								}
+								else if (Value < -0.01f)
+								{
+
+									hasReleasedLeftAxisInput = false;
+									if (!isFacingRight)
+									{
+										characterState = ECharacterState::VE_MovingBackward;
+										isPressingBackward = true;
+									}
+									else {
+										characterState = ECharacterState::VE_MovingForward;
+									}
+								}
+								else
+								{
+									characterState = ECharacterState::VE_Default;
+									//hasReleasedRightAxisInput = true;
+									isPressingBackward = false;
+								}
+							}
+						}
+						else if (canMove && (characterState == ECharacterState::VE_Crouching || characterState == ECharacterState::VE_CrouchBlocking))
+						{
+							if (Value > 0.01f)
+							{
+								hasReleasedRightAxisInput = false;
+								if (!isFacingRight)
+								{
+									isPressingBackward = true;
+								}
+							}
+							else if (Value < -0.01f)
+							{
+								hasReleasedLeftAxisInput = false;
+
+								if (isFacingRight)
+								{
+									isPressingBackward = true;
+								}
+							}
+							else
+							{
+								//hasReleasedAxisInput = true;
+								isPressingBackward = false;
+							}
+						}
+						if (canMove) {
+							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+						}
+
+					}
 				}
+
 			}
-			if (canMove) {
-				AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-			}
-			
 		}
 	}
-
+	
+	
 	
 	
 }
@@ -519,205 +529,211 @@ void AProjectAbyssV2Character::MoveRight(float Value)
 // But for now, it's here, plaguing this code.
 void AProjectAbyssV2Character::MoveRightController(float Value)
 {
-
-	if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
-	{
-		if (Value > 0.01f)
-		{
-			if (!hasReleasedLeftAxisInput)
-			{
-				hasReleasedLeftAxisInput = true;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
-				}
-			}
-
-			if (hasReleasedRightAxisInput)
-			{
-				hasReleasedRightAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-				}
-			}
-
-		}
-		else if (Value < -0.01f)
-		{
-			if (!hasReleasedRightAxisInput)
-			{
-				hasReleasedRightAxisInput = true;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
-				}
-			}
-
-			if (hasReleasedLeftAxisInput)
-			{
-				hasReleasedLeftAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-				}
-			}
-		}
-	}
-	else
-	{
-		if (Value > 0.01f)
-		{
-			if (hasReleasedRightAxisInput)
-			{
-				hasReleasedRightAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-				}
-			}
-		}
-		else if (Value < -0.01f)
-		{
-			if (hasReleasedLeftAxisInput)
-			{
-				hasReleasedLeftAxisInput = false;
-
-				if (isFacingRight)
-				{
-					PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
-
-				}
-				else
-				{
-					PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
-				}
-			}
-		}
-	}
-	if (auto MainMenu = Cast<UMainMenu>(GetGameInstance()))
-	{
-		if (MainMenu->isDeviceForMultiplePlayers)
-		{
-			if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking && comboState == EComboState::E_None)
-			{
-				if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_Launched)
+	if (auto baseGameInstance = Cast<UMainMenu>(GetGameInstance())) {
+		if (auto controller = Cast<APAController>(GetController())) {
+			if (controller->isInputDeviceGamepad) {
+				if (characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_CrouchBlocking)
 				{
 					if (Value > 0.01f)
 					{
-
-						hasReleasedRightAxisInput = false;
-
-						if (!isFacingRight)
+						if (!hasReleasedLeftAxisInput)
 						{
-							characterState = ECharacterState::VE_MovingBackward;
-							isPressingBackward = true;
+							hasReleasedLeftAxisInput = true;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+							}
 						}
-						else
+
+						if (hasReleasedRightAxisInput)
 						{
-							characterState = ECharacterState::VE_MovingForward;
+							hasReleasedRightAxisInput = false;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+							}
+						}
+
+					}
+					else if (Value < -0.01f)
+					{
+						if (!hasReleasedRightAxisInput)
+						{
+							hasReleasedRightAxisInput = true;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Release);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Release);
+							}
+						}
+
+						if (hasReleasedLeftAxisInput)
+						{
+							hasReleasedLeftAxisInput = false;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+							}
+						}
+					}
+				}
+				else
+				{
+					if (Value > 0.01f)
+					{
+						if (hasReleasedRightAxisInput)
+						{
+							hasReleasedRightAxisInput = false;
+
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+							}
 						}
 					}
 					else if (Value < -0.01f)
 					{
-
-						hasReleasedLeftAxisInput = false;
-						if (isFacingRight)
+						if (hasReleasedLeftAxisInput)
 						{
-							characterState = ECharacterState::VE_MovingBackward;
-							isPressingBackward = true;
-						}
-						else {
-							characterState = ECharacterState::VE_MovingForward;
-						}
-					}
-					else
-					{
-						characterState = ECharacterState::VE_Default;
-						//hasReleasedRightAxisInput = true;
-						isPressingBackward = false;
-					}
-				}
-			}
-			else if (canMove && (characterState == ECharacterState::VE_Crouching || characterState == ECharacterState::VE_CrouchBlocking))
-			{
-				if (Value > 0.01f)
-				{
-					hasReleasedRightAxisInput = false;
-					if (!isFacingRight)
-					{
-						isPressingBackward = true;
-					}
-				}
-				else if (Value < -0.01f)
-				{
-					hasReleasedLeftAxisInput = false;
+							hasReleasedLeftAxisInput = false;
 
-					if (isFacingRight)
-					{
-						isPressingBackward = true;
+							if (isFacingRight)
+							{
+								PerformInputLogic(EInputType::E_Backward, EInputStatus::E_Press);
+
+							}
+							else
+							{
+								PerformInputLogic(EInputType::E_Forward, EInputStatus::E_Press);
+							}
+						}
 					}
 				}
-				else
+				if (auto MainMenu = Cast<UMainMenu>(GetGameInstance()))
 				{
-					//hasReleasedAxisInput = true;
-					isPressingBackward = false;
-				}
-			}
-			if (otherPlayer)
-			{
-				float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
-
-				if (currentDistanceApart >= maxDistanceApart)
-				{
-					if ((currentDistanceApart + Value < currentDistanceApart && isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && !isFacingRight))
+					if (MainMenu->isDeviceForMultiplePlayers)
 					{
-						// add movement in that direction
-						if (canMove)
+						if (canMove && characterState != ECharacterState::VE_Crouching && characterState != ECharacterState::VE_Blocking && characterState != ECharacterState::VE_CrouchBlocking && comboState == EComboState::E_None)
 						{
-							AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+							if (characterState != ECharacterState::VE_NeutralJumping && characterState != ECharacterState::VE_ForwardJumping && characterState != ECharacterState::VE_BackwardJumping && comboState != EComboState::E_Launched)
+							{
+								if (Value > 0.01f)
+								{
+
+									hasReleasedRightAxisInput = false;
+
+									if (!isFacingRight)
+									{
+										characterState = ECharacterState::VE_MovingBackward;
+										isPressingBackward = true;
+									}
+									else
+									{
+										characterState = ECharacterState::VE_MovingForward;
+									}
+								}
+								else if (Value < -0.01f)
+								{
+
+									hasReleasedLeftAxisInput = false;
+									if (isFacingRight)
+									{
+										characterState = ECharacterState::VE_MovingBackward;
+										isPressingBackward = true;
+									}
+									else {
+										characterState = ECharacterState::VE_MovingForward;
+									}
+								}
+								else
+								{
+									characterState = ECharacterState::VE_Default;
+									//hasReleasedRightAxisInput = true;
+									isPressingBackward = false;
+								}
+							}
 						}
+						else if (canMove && (characterState == ECharacterState::VE_Crouching || characterState == ECharacterState::VE_CrouchBlocking))
+						{
+							if (Value > 0.01f)
+							{
+								hasReleasedRightAxisInput = false;
+								if (!isFacingRight)
+								{
+									isPressingBackward = true;
+								}
+							}
+							else if (Value < -0.01f)
+							{
+								hasReleasedLeftAxisInput = false;
 
+								if (isFacingRight)
+								{
+									isPressingBackward = true;
+								}
+							}
+							else
+							{
+								//hasReleasedAxisInput = true;
+								isPressingBackward = false;
+							}
+						}
+						if (otherPlayer)
+						{
+							float currentDistanceApart = abs(otherPlayer->GetActorLocation().Y - GetActorLocation().Y);
+
+							if (currentDistanceApart >= maxDistanceApart)
+							{
+								if ((currentDistanceApart + Value < currentDistanceApart && isFacingRight) || (currentDistanceApart - Value < currentDistanceApart && !isFacingRight))
+								{
+									// add movement in that direction
+									if (canMove)
+									{
+										AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+									}
+
+								}
+							}
+							else
+							{
+								if (canMove)
+								{
+									// add movement in that direction
+									AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
+								}
+
+							}
+
+						}
 					}
 				}
-				else
-				{
-					if (canMove)
-					{
-						// add movement in that direction
-						AddMovementInput(FVector(0.f, -1.f, 0.f), Value);
-					}
-
-				}
-
 			}
 		}
 	}
+	
 }
 
 

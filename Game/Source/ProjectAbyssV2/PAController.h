@@ -58,7 +58,16 @@ public:
 	void PerformStartInputLogic();
 	UFUNCTION(BlueprintCallable)
 	void CallStartTerrorAttack();
+
+	UFUNCTION(BlueprintCallable)
+	void ClearCharacter();
+	
+
+	void DetermineInputDeviceDetails(FKey _keyPressed);
 	
 
 	AProjectAbyssV2Character* possessedPawn;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Controller");
+	bool isInputDeviceGamepad;
 };
