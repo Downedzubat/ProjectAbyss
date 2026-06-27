@@ -14,7 +14,11 @@ enum class ECharacterClass : uint8
 	VE_Default		  UMETA(DisplayName = "Mannequin"),
 	VE_MASK			  UMETA(DisplayName = "Mask"),
 	VE_FIGHTMAN		  UMETA(DisplayName = "FightMan"),
-	VE_ENDURAW		  UMETA(DisplayName = "Enduraw")
+	VE_ENDURAW		  UMETA(DisplayName = "Enduraw"),
+	VE_ABYSS				UMETA(DisplayName = "Abyss"),
+	VE_PARACITE		UMETA(DisplayName = "Paracite"),
+	VE_CULTIST			UMETA(DisplayName = "Cultist"),
+	VE_VAMPIRE		UMETA(DisplayName = "Vampire")
 };
 
 
